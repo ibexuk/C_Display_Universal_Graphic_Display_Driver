@@ -909,13 +909,14 @@ CONSTANT BYTE *display_const_string (CONSTANT BYTE *p_font, WORD options,
 	WORD leading_pad_width;
 	WORD trailing_pad_width;
 	BYTE doing_1st_line = 1;
+	BYTE doing_vertical_align_dummy_run = 0;
+	WORD vertical_padding_top = vertical_padding;			//Used for vertical align
+	CONSTANT BYTE *p_string_copy;
 
 
-
-
+	p_string_copy = p_string;
 	p_string_start_of_line = p_string;
 	x_start_coord_copy = x_start_coord;
-
 	display_auto_y_coordinate = y_start_coord;
 
 
@@ -945,6 +946,7 @@ CONSTANT BYTE *display_const_string (CONSTANT BYTE *p_font, WORD options,
 			y_end_coord = w_temp;
 		}
 	}
+
 
 	//-------------------------------------
 	//----- CALCULATE MIN & MAX WIDTH -----
@@ -982,259 +984,297 @@ CONSTANT BYTE *display_const_string (CONSTANT BYTE *p_font, WORD options,
 		return(0);					//Error
 
 
-
-
-	while (text_remaining)
+	//------------------------------------
+	//----- CHECK FOR VERTICAL ALIGN -----
+	//------------------------------------
+	if (
+		((options & DISPLAY_TEXT_VALIGN_MASK) == DISPLAY_TEXT_ALIGN_MIDDLE) ||
+		((options & DISPLAY_TEXT_VALIGN_MASK) == DISPLAY_TEXT_ALIGN_BOTTOM)
+	)
 	{
-		//-----------------------------
-		//-----------------------------
-		//----- DISPLAY NEXT LINE -----
-		//-----------------------------
-		//-----------------------------
-		
-		x_start_coord = x_start_coord_copy;
-		
-		//-------------------------------------------------------
-		//----- GET WIDTH OF STRING TO DISPLAY ON THIS LINE -----
-		//-------------------------------------------------------
-		string_width = 0;
-		p_string = p_string_end_of_line = p_string_start_of_line;
-		string_width_at_last_end_of_word = 0;
-		
-
-		while (1)
-		{
-			p_string = display_const_string_get_next_char(p_string, &next_character);
-			if (next_character == 0x00)			//Do until null terminator
-				break;
-
-			if (next_character == ' ')
-			{
-				//-------------------------
-				//----- END OF A WORD -----
-				//-------------------------
-				p_string_last_end_of_word = p_string - 2;
-				string_width_at_last_end_of_word = (string_width - display_font_spacing);
-			}
-			
-			display_get_font_character(next_character);		//Loads display_bitmap_width
-			string_width += display_bitmap_width;
-			
-			if (string_width > max_width)
-			{
-				//--------------------------------------------------------------
-				//----- TOO LONG FOR WIDTH - MOVE BACK TO LAST END OF WORD -----
-				//--------------------------------------------------------------
-				if (string_width_at_last_end_of_word == 0)
-					return(0);									//No end of word found - unable to display
-				
-				//Reset ready for display of string
-				p_string = p_string_start_of_line;
-				p_string_end_of_line = p_string_last_end_of_word;
-				string_width = string_width_at_last_end_of_word;
-				
-				//Setup for display of next line
-				p_string_start_of_line = (p_string_last_end_of_word + 2);		//Move past space character
-				break;
-			}
-			
-			string_width += display_font_spacing;			//Add gap to next character
-		}
-		
-		if (p_string_end_of_line == p_string_start_of_line)
-		{
-			//----- END OF STRING WAS REACHED -----
-			p_string_end_of_line = (p_string - 2);
-			p_string = p_string_start_of_line;
-			string_width -= display_font_spacing;			//Remove the final inter character gap that won't be displayed
-			text_remaining = 0;
-			p_string_start_of_line = 0;
-		}
-		
-
-		
-		//We now have:
-		//	p_string				1st character to display
-		//	p_string_end_of_line	Last character to display
-		//	string_width			Total width of this lines characters
-		//	p_string_start_of_line	1st character of next line to display
-		
-		
-		
-		if ((options & DISPLAY_TEXT_ALIGN_MASK) == DISPLAY_TEXT_ALIGN_LEFT)
-		{
-			//------------------------
-			//----- LEFT ALIGNED -----
-			//------------------------
-			leading_pad_width = horizontal_padding;
-			trailing_pad_width = horizontal_padding;
-			if (x_end_coord)
-			{
-				trailing_pad_width += (max_width - string_width);		//max_width is the requried width after padding
-			}
-		}
-		else if ((options & DISPLAY_TEXT_ALIGN_MASK) == DISPLAY_TEXT_ALIGN_RIGHT)
-		{
-			//-------------------------
-			//----- RIGHT ALIGNED -----
-			//-------------------------
-			leading_pad_width = horizontal_padding;
-			trailing_pad_width = horizontal_padding;
-			if (x_end_coord)
-			{
-				leading_pad_width += (max_width - string_width);		//max_width is the requried width after padding
-			}
-			else
-			{
-				x_start_coord -= (string_width + leading_pad_width + trailing_pad_width);
-			}
-		}
-		else if ((options & DISPLAY_TEXT_ALIGN_MASK) == DISPLAY_TEXT_ALIGN_CENTRE)
-		{
-			//--------------------------
-			//----- CENTRE ALIGNED -----
-			//--------------------------
-			leading_pad_width = horizontal_padding;
-			trailing_pad_width = horizontal_padding;
-			
-			w_temp = 0;
-			if (x_end_coord)
-				w_temp = (max_width - string_width);		//max_width is the requried width after padding
-
-			if (w_temp & 0x01)
-			{
-				leading_pad_width += (w_temp >> 1);
-				trailing_pad_width += (w_temp >> 1) + 1;
-			}
-			else
-			{
-				leading_pad_width += (w_temp >> 1);
-				trailing_pad_width += (w_temp >> 1);
-			}
-
-			
-			if (x_end_coord == 0)
-			{
-				x_start_coord -= (string_width + leading_pad_width + trailing_pad_width) >> 1;
-			}
-		}
-
-
-		//----------------------------------------
-		//----- DISPLAY TOP VERTICAL PADDING -----
-		//----------------------------------------
-		if ((doing_1st_line) && (vertical_padding))
-		{
-			if (display_background_colour != DISPLAY_COLOUR_NULL)
-			{
-				display_write_block(x_start_coord, display_auto_y_coordinate,
-									(x_start_coord + leading_pad_width + string_width + trailing_pad_width - 1), (display_auto_y_coordinate + vertical_padding - 1),
-									display_background_colour);
-			}
-			
-			display_auto_y_coordinate += vertical_padding;
-		}
-		doing_1st_line = 0;
-
+		doing_vertical_align_dummy_run = 1;
+	}
 	
-	
-		//SETUP FOR DISPLAY
-		display_auto_x_coordinate = x_start_coord;
-
-	
-		//---------------------------------------------------
-		//----- DISPLAY LEADING WHITESPACE IF NECESSARY -----
-		//---------------------------------------------------
-		if (leading_pad_width)
+	while (1)
+	{
+		while (text_remaining)
 		{
-			if (display_background_colour != DISPLAY_COLOUR_NULL)
-			{
-				display_write_block(display_auto_x_coordinate, display_auto_y_coordinate,
-									(display_auto_x_coordinate + leading_pad_width - 1), (display_auto_y_coordinate + display_bitmap_height - 1),
-									display_background_colour);
-			}
-			display_auto_x_coordinate += leading_pad_width;
-		}
-
-		
-		//------------------------------
-		//----- DISPLAY THE STRING -----
-		//------------------------------
-		p_string = display_const_string_get_next_char(p_string, &next_character);
-		while (next_character > 0x0000)			//Do until null terminator
-		{
-			//GET THE CHARACTER VALUES
-			display_get_font_character(next_character);
+			//-----------------------------
+			//-----------------------------
+			//----- DISPLAY NEXT LINE -----
+			//-----------------------------
+			//-----------------------------
 			
-			//DISPLAY CHARACTER
-			display_character();
+			x_start_coord = x_start_coord_copy;
+			
+			//-------------------------------------------------------
+			//----- GET WIDTH OF STRING TO DISPLAY ON THIS LINE -----
+			//-------------------------------------------------------
+			string_width = 0;
+			p_string = p_string_end_of_line = p_string_start_of_line;
+			string_width_at_last_end_of_word = 0;
+			
 
-			//CHECK FOR END OF LINE
-			if (p_string == (p_string_end_of_line + 1))
-				break;
-	
-			p_string = display_const_string_get_next_char(p_string, &next_character);
-			if (next_character != 0x00)
+			while (1)
 			{
-				//DISPLAY THE GAP TO NEXT CHARACTER
-				if (display_background_colour != DISPLAY_COLOUR_NULL)
+				p_string = display_const_string_get_next_char(p_string, &next_character);
+				if (next_character == 0x00)			//Do until null terminator
+					break;
+
+				if (next_character == ' ')
 				{
-					display_write_block(display_auto_x_coordinate, display_auto_y_coordinate,
-										(display_auto_x_coordinate + display_font_spacing - 1), (display_auto_y_coordinate + display_bitmap_height - 1),
+					//-------------------------
+					//----- END OF A WORD -----
+					//-------------------------
+					p_string_last_end_of_word = p_string - 2;
+					string_width_at_last_end_of_word = (string_width - display_font_spacing);
+				}
+				
+				display_get_font_character(next_character);		//Loads display_bitmap_width
+				string_width += display_bitmap_width;
+				
+				if (string_width > max_width)
+				{
+					//--------------------------------------------------------------
+					//----- TOO LONG FOR WIDTH - MOVE BACK TO LAST END OF WORD -----
+					//--------------------------------------------------------------
+					if (string_width_at_last_end_of_word == 0)
+						return(0);									//No end of word found - unable to display
+					
+					//Reset ready for display of string
+					p_string = p_string_start_of_line;
+					p_string_end_of_line = p_string_last_end_of_word;
+					string_width = string_width_at_last_end_of_word;
+					
+					//Setup for display of next line
+					p_string_start_of_line = (p_string_last_end_of_word + 2);		//Move past space character
+					break;
+				}
+				
+				string_width += display_font_spacing;			//Add gap to next character
+			}
+			
+			if (p_string_end_of_line == p_string_start_of_line)
+			{
+				//----- END OF STRING WAS REACHED -----
+				p_string_end_of_line = (p_string - 2);
+				p_string = p_string_start_of_line;
+				string_width -= display_font_spacing;			//Remove the final inter character gap that won't be displayed
+				text_remaining = 0;
+				p_string_start_of_line = 0;
+			}
+			
+
+			
+			//We now have:
+			//	p_string				1st character to display
+			//	p_string_end_of_line	Last character to display
+			//	string_width			Total width of this lines characters
+			//	p_string_start_of_line	1st character of next line to display
+			
+			
+			
+			if ((options & DISPLAY_TEXT_ALIGN_MASK) == DISPLAY_TEXT_ALIGN_LEFT)
+			{
+				//------------------------
+				//----- LEFT ALIGNED -----
+				//------------------------
+				leading_pad_width = horizontal_padding;
+				trailing_pad_width = horizontal_padding;
+				if (x_end_coord)
+				{
+					trailing_pad_width += (max_width - string_width);		//max_width is the requried width after padding
+				}
+			}
+			else if ((options & DISPLAY_TEXT_ALIGN_MASK) == DISPLAY_TEXT_ALIGN_RIGHT)
+			{
+				//-------------------------
+				//----- RIGHT ALIGNED -----
+				//-------------------------
+				leading_pad_width = horizontal_padding;
+				trailing_pad_width = horizontal_padding;
+				if (x_end_coord)
+				{
+					leading_pad_width += (max_width - string_width);		//max_width is the requried width after padding
+				}
+				else
+				{
+					x_start_coord -= (string_width + leading_pad_width + trailing_pad_width);
+				}
+			}
+			else if ((options & DISPLAY_TEXT_ALIGN_MASK) == DISPLAY_TEXT_ALIGN_CENTRE)
+			{
+				//--------------------------
+				//----- CENTRE ALIGNED -----
+				//--------------------------
+				leading_pad_width = horizontal_padding;
+				trailing_pad_width = horizontal_padding;
+				
+				w_temp = 0;
+				if (x_end_coord)
+					w_temp = (max_width - string_width);		//max_width is the requried width after padding
+
+				if (w_temp & 0x01)
+				{
+					leading_pad_width += (w_temp >> 1);
+					trailing_pad_width += (w_temp >> 1) + 1;
+				}
+				else
+				{
+					leading_pad_width += (w_temp >> 1);
+					trailing_pad_width += (w_temp >> 1);
+				}
+
+				
+				if (x_end_coord == 0)
+				{
+					x_start_coord -= (string_width + leading_pad_width + trailing_pad_width) >> 1;
+				}
+			}
+
+
+			//----------------------------------------
+			//----- DISPLAY TOP VERTICAL PADDING -----
+			//----------------------------------------
+			if ((doing_1st_line) && (vertical_padding_top))
+			{
+				if ((display_background_colour != DISPLAY_COLOUR_NULL) && (!doing_vertical_align_dummy_run))
+				{
+					display_write_block(x_start_coord, display_auto_y_coordinate,
+										(x_start_coord + leading_pad_width + string_width + trailing_pad_width - 1), (display_auto_y_coordinate + vertical_padding_top - 1),
 										display_background_colour);
 				}
-	
-				display_auto_x_coordinate += display_font_spacing;
+				
+				display_auto_y_coordinate += vertical_padding_top;
 			}
-	
-	
-		} //while (next_character > 0x00)
+			doing_1st_line = 0;
 
-
-		//----------------------------------------------------
-		//----- DISPLAY TRAILING WHITESPACE IF NECESSARY -----
-		//----------------------------------------------------
-		if (trailing_pad_width)
-		{
-			if (display_background_colour != DISPLAY_COLOUR_NULL)
-			{
-				display_write_block(display_auto_x_coordinate, display_auto_y_coordinate,
-									(display_auto_x_coordinate + trailing_pad_width - 1), (display_auto_y_coordinate + display_bitmap_height - 1),
-									display_background_colour);
-			}
-			display_auto_x_coordinate += trailing_pad_width;
-		}
 		
-		//Move down to next line
-		display_last_text_line_y_coordinate = display_auto_y_coordinate;			//Store last line we displayed on for user functions if they need it
-		display_auto_y_coordinate += display_bitmap_height;	
 		
-		if (text_remaining)
-		{
-			//-----------------------------------------
-			//----- THERE IS MORE TEXT TO DISPLAY -----
-			//-----------------------------------------
-			if (display_background_colour != DISPLAY_COLOUR_NULL)
-			{
-				display_write_block(x_start_coord, display_auto_y_coordinate,
-									(x_start_coord + leading_pad_width + string_width + trailing_pad_width - 1), (display_auto_y_coordinate + display_font_inter_line_space - 1),
-									display_background_colour);
-			}
-			display_auto_y_coordinate += display_font_inter_line_space;
+			//SETUP FOR DISPLAY
+			display_auto_x_coordinate = x_start_coord;
 
-			//Check for not out of space
-			if (y_end_coord)
+		
+			//---------------------------------------------------
+			//----- DISPLAY LEADING WHITESPACE IF NECESSARY -----
+			//---------------------------------------------------
+			if (leading_pad_width)
 			{
-				if ((display_auto_y_coordinate + display_bitmap_height + display_font_inter_line_space + vertical_padding) > y_end_coord)
+				if ((display_background_colour != DISPLAY_COLOUR_NULL) && (!doing_vertical_align_dummy_run))
 				{
-					text_remaining = 0;					//No more space to display
-					display_auto_y_coordinate -= display_font_inter_line_space;
+					display_write_block(display_auto_x_coordinate, display_auto_y_coordinate,
+										(display_auto_x_coordinate + leading_pad_width - 1), (display_auto_y_coordinate + display_bitmap_height - 1),
+										display_background_colour);
+				}
+				display_auto_x_coordinate += leading_pad_width;
+			}
+
+			
+			//------------------------------
+			//----- DISPLAY THE STRING -----
+			//------------------------------
+			p_string = display_const_string_get_next_char(p_string, &next_character);
+			while (next_character > 0x0000)			//Do until null terminator
+			{
+				//GET THE CHARACTER VALUES
+				display_get_font_character(next_character);
+				
+				//DISPLAY CHARACTER
+				if (!doing_vertical_align_dummy_run)
+					display_character();
+				else
+					display_auto_x_coordinate += display_bitmap_width;
+
+				//CHECK FOR END OF LINE
+				if (p_string == (p_string_end_of_line + 1))
+					break;
+		
+				p_string = display_const_string_get_next_char(p_string, &next_character);
+				if (next_character != 0x00)
+				{
+					//DISPLAY THE GAP TO NEXT CHARACTER
+					if (display_background_colour != DISPLAY_COLOUR_NULL)
+					{
+						display_write_block(display_auto_x_coordinate, display_auto_y_coordinate,
+											(display_auto_x_coordinate + display_font_spacing - 1), (display_auto_y_coordinate + display_bitmap_height - 1),
+											display_background_colour);
+					}
+		
+					display_auto_x_coordinate += display_font_spacing;
+				}
+		
+		
+			} //while (next_character > 0x00)
+
+
+			//----------------------------------------------------
+			//----- DISPLAY TRAILING WHITESPACE IF NECESSARY -----
+			//----------------------------------------------------
+			if (trailing_pad_width)
+			{
+				if ((display_background_colour != DISPLAY_COLOUR_NULL) && (!doing_vertical_align_dummy_run))
+				{
+					display_write_block(display_auto_x_coordinate, display_auto_y_coordinate,
+										(display_auto_x_coordinate + trailing_pad_width - 1), (display_auto_y_coordinate + display_bitmap_height - 1),
+										display_background_colour);
+				}
+				display_auto_x_coordinate += trailing_pad_width;
+			}
+			
+			//Move down to next line
+			display_last_text_line_y_coordinate = display_auto_y_coordinate;			//Store last line we displayed on for user functions if they need it
+			display_auto_y_coordinate += display_bitmap_height;	
+			
+			if (text_remaining)
+			{
+				//-----------------------------------------
+				//----- THERE IS MORE TEXT TO DISPLAY -----
+				//-----------------------------------------
+				if (display_background_colour != DISPLAY_COLOUR_NULL)
+				{
+					display_write_block(x_start_coord, display_auto_y_coordinate,
+										(x_start_coord + leading_pad_width + string_width + trailing_pad_width - 1), (display_auto_y_coordinate + display_font_inter_line_space - 1),
+										display_background_colour);
+				}
+				display_auto_y_coordinate += display_font_inter_line_space;
+
+				//Check for not out of space
+				if (y_end_coord)
+				{
+					if ((display_auto_y_coordinate + display_bitmap_height + vertical_padding) > y_end_coord)
+					{
+						text_remaining = 0;					//No more space to display
+						display_auto_y_coordinate -= display_font_inter_line_space;
+					}
 				}
 			}
+
+
+		} //while (text_remaining)
+		
+		if (doing_vertical_align_dummy_run)
+		{
+			//---------------------------------------------------
+			//----- NOW DISPLAY FOR REAL VERTICALLY ALIGNED -----
+			//---------------------------------------------------
+			doing_vertical_align_dummy_run = 0;
+
+			if (display_auto_y_coordinate < y_end_coord)
+			{
+				if ((options & DISPLAY_TEXT_VALIGN_MASK) == DISPLAY_TEXT_ALIGN_MIDDLE)
+					vertical_padding_top += (y_end_coord - display_auto_y_coordinate) >> 1;
+				else if ((options & DISPLAY_TEXT_VALIGN_MASK) == DISPLAY_TEXT_ALIGN_BOTTOM)
+					vertical_padding_top += y_end_coord - display_auto_y_coordinate;
+			}
+			
+			p_string_start_of_line = p_string = p_string_copy;
+			display_auto_y_coordinate = y_start_coord;
+			text_remaining = 1;
+			doing_1st_line = 1;
+			continue;
 		}
-
-
-	} //while (text_remaining)
+		break;
+	} //while (1)
 
 
 	//-------------------------------------------
@@ -1362,11 +1402,14 @@ CONSTANT BYTE *display_variable_string (CONSTANT BYTE *p_font, WORD options,
 	WORD leading_pad_width;
 	WORD trailing_pad_width;
 	BYTE doing_1st_line = 1;
+	BYTE doing_vertical_align_dummy_run = 0;
+	WORD vertical_padding_top = vertical_padding;			//Used for vertical align
+	BYTE *p_string_copy;
 
 
+	p_string_copy = p_string;
 	p_string_start_of_line = p_string;
 	x_start_coord_copy = x_start_coord;
-
 	display_auto_y_coordinate = y_start_coord;
 
 
@@ -1434,258 +1477,297 @@ CONSTANT BYTE *display_variable_string (CONSTANT BYTE *p_font, WORD options,
 		return(0);					//Error
 
 
-
-	while (text_remaining)
+	//------------------------------------
+	//----- CHECK FOR VERTICAL ALIGN -----
+	//------------------------------------
+	if (
+		((options & DISPLAY_TEXT_VALIGN_MASK) == DISPLAY_TEXT_ALIGN_MIDDLE) ||
+		((options & DISPLAY_TEXT_VALIGN_MASK) == DISPLAY_TEXT_ALIGN_BOTTOM)
+	)
 	{
-		//-----------------------------
-		//-----------------------------
-		//----- DISPLAY NEXT LINE -----
-		//-----------------------------
-		//-----------------------------
-		
-		x_start_coord = x_start_coord_copy;
-		
-		//-------------------------------------------------------
-		//----- GET WIDTH OF STRING TO DISPLAY ON THIS LINE -----
-		//-------------------------------------------------------
-		string_width = 0;
-		p_string = p_string_end_of_line = p_string_start_of_line;
-		string_width_at_last_end_of_word = 0;
-		
-		while (1)
+		doing_vertical_align_dummy_run = 1;
+	}
+	
+	while (1)
+	{
+		while (text_remaining)
 		{
-			p_string = display_variable_string_get_next_char(p_string, &next_character);
-			if (next_character == 0x00)			//Do until null terminator
-				break;
+			//-----------------------------
+			//-----------------------------
+			//----- DISPLAY NEXT LINE -----
+			//-----------------------------
+			//-----------------------------
 			
-			if (next_character == ' ')
+			x_start_coord = x_start_coord_copy;
+			
+			//-------------------------------------------------------
+			//----- GET WIDTH OF STRING TO DISPLAY ON THIS LINE -----
+			//-------------------------------------------------------
+			string_width = 0;
+			p_string = p_string_end_of_line = p_string_start_of_line;
+			string_width_at_last_end_of_word = 0;
+			
+			while (1)
 			{
-				//-------------------------
-				//----- END OF A WORD -----
-				//-------------------------
-				p_string_last_end_of_word = p_string - 2;
-				string_width_at_last_end_of_word = (string_width - display_font_spacing);
-			}
-			
-			display_get_font_character(next_character);		//Loads display_bitmap_width
-			string_width += display_bitmap_width;
-			
-			if (string_width > max_width)
-			{
-				//--------------------------------------------------------------
-				//----- TOO LONG FOR WIDTH - MOVE BACK TO LAST END OF WORD -----
-				//--------------------------------------------------------------
-				if (string_width_at_last_end_of_word == 0)
-					return(0);									//No end of word found - unable to display
+				p_string = display_variable_string_get_next_char(p_string, &next_character);
+				if (next_character == 0x00)			//Do until null terminator
+					break;
 				
-				//Reset ready for display of string
-				p_string = p_string_start_of_line;
-				p_string_end_of_line = p_string_last_end_of_word;
-				string_width = string_width_at_last_end_of_word;
-				
-				//Setup for display of next line
-				p_string_start_of_line = (p_string_last_end_of_word + 2);		//Move past space character
-				break;
-			}
-			
-			string_width += display_font_spacing;			//Add gap to next character
-		}
-		
-		if (p_string_end_of_line == p_string_start_of_line)
-		{
-			//----- END OF STRING WAS REACHED -----
-			p_string_end_of_line = (p_string - 2);
-			p_string = p_string_start_of_line;
-			string_width -= display_font_spacing;			//Remove the final inter character gap that won't be displayed
-			text_remaining = 0;
-			p_string_start_of_line = 0;
-		}
-		
-
-		
-		//We now have:
-		//	p_string				1st character to display
-		//	p_string_end_of_line	Last character to display
-		//	string_width			Total width of this lines characters
-		//	p_string_start_of_line	1st character of next line to display
-		
-		
-		
-		if ((options & DISPLAY_TEXT_ALIGN_MASK) == DISPLAY_TEXT_ALIGN_LEFT)
-		{
-			//------------------------
-			//----- LEFT ALIGNED -----
-			//------------------------
-			leading_pad_width = horizontal_padding;
-			trailing_pad_width = horizontal_padding;
-			if (x_end_coord)
-			{
-				trailing_pad_width += (max_width - string_width);		//max_width is the requried width after padding
-			}
-		}
-		else if ((options & DISPLAY_TEXT_ALIGN_MASK) == DISPLAY_TEXT_ALIGN_RIGHT)
-		{
-			//-------------------------
-			//----- RIGHT ALIGNED -----
-			//-------------------------
-			leading_pad_width = horizontal_padding;
-			trailing_pad_width = horizontal_padding;
-			if (x_end_coord)
-			{
-				leading_pad_width += (max_width - string_width);		//max_width is the requried width after padding
-			}
-			else
-			{
-				x_start_coord -= (string_width + leading_pad_width + trailing_pad_width);
-			}
-		}
-		else if ((options & DISPLAY_TEXT_ALIGN_MASK) == DISPLAY_TEXT_ALIGN_CENTRE)
-		{
-			//--------------------------
-			//----- CENTRE ALIGNED -----
-			//--------------------------
-			leading_pad_width = horizontal_padding;
-			trailing_pad_width = horizontal_padding;
-			
-			w_temp = 0;
-			if (x_end_coord)
-				w_temp = (max_width - string_width);		//max_width is the requried width after padding
-
-			if (w_temp & 0x01)
-			{
-				leading_pad_width += (w_temp >> 1);
-				trailing_pad_width += (w_temp >> 1) + 1;
-			}
-			else
-			{
-				leading_pad_width += (w_temp >> 1);
-				trailing_pad_width += (w_temp >> 1);
-			}
-
-			
-			if (x_end_coord == 0)
-			{
-				x_start_coord -= (string_width + leading_pad_width + trailing_pad_width) >> 1;
-			}
-		}
-
-
-
-		//----------------------------------------
-		//----- DISPLAY TOP VERTICAL PADDING -----
-		//----------------------------------------
-		if ((doing_1st_line) && (vertical_padding))
-		{
-			if (display_background_colour != DISPLAY_COLOUR_NULL)
-			{
-				display_write_block(x_start_coord, display_auto_y_coordinate,
-									(x_start_coord + leading_pad_width + string_width + trailing_pad_width - 1), (display_auto_y_coordinate + vertical_padding - 1),
-									display_background_colour);
-			}
-			
-			display_auto_y_coordinate += vertical_padding;
-		}
-		doing_1st_line = 0;
-
-	
-	
-		//SETUP FOR DISPLAY
-		display_auto_x_coordinate = x_start_coord;
-
-	
-		//---------------------------------------------------
-		//----- DISPLAY LEADING WHITESPACE IF NECESSARY -----
-		//---------------------------------------------------
-		if (leading_pad_width)
-		{
-			if (display_background_colour != DISPLAY_COLOUR_NULL)
-			{
-				display_write_block(display_auto_x_coordinate, display_auto_y_coordinate,
-									(display_auto_x_coordinate + leading_pad_width - 1), (display_auto_y_coordinate + display_bitmap_height - 1),
-									display_background_colour);
-			}
-			display_auto_x_coordinate += leading_pad_width;
-		}
-
-		
-		//------------------------------
-		//----- DISPLAY THE STRING -----
-		//------------------------------
-		p_string = display_variable_string_get_next_char(p_string, &next_character);
-		while (next_character > 0x0000)			//Do until null terminator
-		{
-	
-			//GET THE CHARACTER VALUES
-			display_get_font_character(next_character);
-			
-			//DISPLAY CHARACTER
-			display_character();
-
-			//CHECK FOR END OF LINE
-			if (p_string == (p_string_end_of_line + 1))
-				break;
-	
-			p_string = display_variable_string_get_next_char(p_string, &next_character);			
-			if (next_character != 0x00)
-			{
-				//DISPLAY THE GAP TO NEXT CHARACTER
-				if (display_background_colour != DISPLAY_COLOUR_NULL)
+				if (next_character == ' ')
 				{
-					display_write_block(display_auto_x_coordinate, display_auto_y_coordinate,
-										(display_auto_x_coordinate + display_font_spacing - 1), (display_auto_y_coordinate + display_bitmap_height - 1),
+					//-------------------------
+					//----- END OF A WORD -----
+					//-------------------------
+					p_string_last_end_of_word = p_string - 2;
+					string_width_at_last_end_of_word = (string_width - display_font_spacing);
+				}
+				
+				display_get_font_character(next_character);		//Loads display_bitmap_width
+				string_width += display_bitmap_width;
+				
+				if (string_width > max_width)
+				{
+					//--------------------------------------------------------------
+					//----- TOO LONG FOR WIDTH - MOVE BACK TO LAST END OF WORD -----
+					//--------------------------------------------------------------
+					if (string_width_at_last_end_of_word == 0)
+						return(0);									//No end of word found - unable to display
+					
+					//Reset ready for display of string
+					p_string = p_string_start_of_line;
+					p_string_end_of_line = p_string_last_end_of_word;
+					string_width = string_width_at_last_end_of_word;
+					
+					//Setup for display of next line
+					p_string_start_of_line = (p_string_last_end_of_word + 2);		//Move past space character
+					break;
+				}
+				
+				string_width += display_font_spacing;			//Add gap to next character
+			}
+			
+			if (p_string_end_of_line == p_string_start_of_line)
+			{
+				//----- END OF STRING WAS REACHED -----
+				p_string_end_of_line = (p_string - 2);
+				p_string = p_string_start_of_line;
+				string_width -= display_font_spacing;			//Remove the final inter character gap that won't be displayed
+				text_remaining = 0;
+				p_string_start_of_line = 0;
+			}
+			
+
+			
+			//We now have:
+			//	p_string				1st character to display
+			//	p_string_end_of_line	Last character to display
+			//	string_width			Total width of this lines characters
+			//	p_string_start_of_line	1st character of next line to display
+			
+			
+			
+			if ((options & DISPLAY_TEXT_ALIGN_MASK) == DISPLAY_TEXT_ALIGN_LEFT)
+			{
+				//------------------------
+				//----- LEFT ALIGNED -----
+				//------------------------
+				leading_pad_width = horizontal_padding;
+				trailing_pad_width = horizontal_padding;
+				if (x_end_coord)
+				{
+					trailing_pad_width += (max_width - string_width);		//max_width is the requried width after padding
+				}
+			}
+			else if ((options & DISPLAY_TEXT_ALIGN_MASK) == DISPLAY_TEXT_ALIGN_RIGHT)
+			{
+				//-------------------------
+				//----- RIGHT ALIGNED -----
+				//-------------------------
+				leading_pad_width = horizontal_padding;
+				trailing_pad_width = horizontal_padding;
+				if (x_end_coord)
+				{
+					leading_pad_width += (max_width - string_width);		//max_width is the requried width after padding
+				}
+				else
+				{
+					x_start_coord -= (string_width + leading_pad_width + trailing_pad_width);
+				}
+			}
+			else if ((options & DISPLAY_TEXT_ALIGN_MASK) == DISPLAY_TEXT_ALIGN_CENTRE)
+			{
+				//--------------------------
+				//----- CENTRE ALIGNED -----
+				//--------------------------
+				leading_pad_width = horizontal_padding;
+				trailing_pad_width = horizontal_padding;
+				
+				w_temp = 0;
+				if (x_end_coord)
+					w_temp = (max_width - string_width);		//max_width is the requried width after padding
+
+				if (w_temp & 0x01)
+				{
+					leading_pad_width += (w_temp >> 1);
+					trailing_pad_width += (w_temp >> 1) + 1;
+				}
+				else
+				{
+					leading_pad_width += (w_temp >> 1);
+					trailing_pad_width += (w_temp >> 1);
+				}
+
+				
+				if (x_end_coord == 0)
+				{
+					x_start_coord -= (string_width + leading_pad_width + trailing_pad_width) >> 1;
+				}
+			}
+
+
+
+			//----------------------------------------
+			//----- DISPLAY TOP VERTICAL PADDING -----
+			//----------------------------------------
+			if ((doing_1st_line) && (vertical_padding_top))
+			{
+				if ((display_background_colour != DISPLAY_COLOUR_NULL) && (!doing_vertical_align_dummy_run))
+				{
+					display_write_block(x_start_coord, display_auto_y_coordinate,
+										(x_start_coord + leading_pad_width + string_width + trailing_pad_width - 1), (display_auto_y_coordinate + vertical_padding_top - 1),
 										display_background_colour);
 				}
-	
-				display_auto_x_coordinate += display_font_spacing;
+				
+				display_auto_y_coordinate += vertical_padding_top;
 			}
-	
-	
-		} //while (next_character > 0x00)
+			doing_1st_line = 0;
 
-
-		//----------------------------------------------------
-		//----- DISPLAY TRAILING WHITESPACE IF NECESSARY -----
-		//----------------------------------------------------
-		if (trailing_pad_width)
-		{
-			if (display_background_colour != DISPLAY_COLOUR_NULL)
-			{
-				display_write_block(display_auto_x_coordinate, display_auto_y_coordinate,
-									(display_auto_x_coordinate + trailing_pad_width - 1), (display_auto_y_coordinate + display_bitmap_height - 1),
-									display_background_colour);
-			}
-			display_auto_x_coordinate += trailing_pad_width;
-		}
-
-		//Move down to next line
-		display_last_text_line_y_coordinate = display_auto_y_coordinate;			//Store last line we displayed on for user functions if they need it
-		display_auto_y_coordinate += display_bitmap_height;		
 		
-		if (text_remaining)
-		{
-			//-----------------------------------------
-			//----- THERE IS MORE TEXT TO DISPLAY -----
-			//-----------------------------------------
-			if (display_background_colour != DISPLAY_COLOUR_NULL)
-			{
-				display_write_block(x_start_coord, display_auto_y_coordinate,
-									(x_start_coord + leading_pad_width + string_width + trailing_pad_width - 1), (display_auto_y_coordinate + display_font_inter_line_space - 1),
-									display_background_colour);
-			}
-			display_auto_y_coordinate += display_font_inter_line_space;
+		
+			//SETUP FOR DISPLAY
+			display_auto_x_coordinate = x_start_coord;
 
-			//Check for not out of space
-			if (y_end_coord)
+		
+			//---------------------------------------------------
+			//----- DISPLAY LEADING WHITESPACE IF NECESSARY -----
+			//---------------------------------------------------
+			if (leading_pad_width)
 			{
-				if ((display_auto_y_coordinate + display_bitmap_height + display_font_inter_line_space + vertical_padding) > y_end_coord)
+				if ((display_background_colour != DISPLAY_COLOUR_NULL) && (!doing_vertical_align_dummy_run))
 				{
-					text_remaining = 0;					//No more space to display
-					display_auto_y_coordinate -= display_font_inter_line_space;
+					display_write_block(display_auto_x_coordinate, display_auto_y_coordinate,
+										(display_auto_x_coordinate + leading_pad_width - 1), (display_auto_y_coordinate + display_bitmap_height - 1),
+										display_background_colour);
+				}
+				display_auto_x_coordinate += leading_pad_width;
+			}
+
+			
+			//------------------------------
+			//----- DISPLAY THE STRING -----
+			//------------------------------
+			p_string = display_variable_string_get_next_char(p_string, &next_character);
+			while (next_character > 0x0000)			//Do until null terminator
+			{
+		
+				//GET THE CHARACTER VALUES
+				display_get_font_character(next_character);
+				
+				//DISPLAY CHARACTER
+				if (!doing_vertical_align_dummy_run)
+					display_character();
+				else
+					display_auto_x_coordinate += display_bitmap_width;
+
+				//CHECK FOR END OF LINE
+				if (p_string == (p_string_end_of_line + 1))
+					break;
+		
+				p_string = display_variable_string_get_next_char(p_string, &next_character);			
+				if (next_character != 0x00)
+				{
+					//DISPLAY THE GAP TO NEXT CHARACTER
+					if (display_background_colour != DISPLAY_COLOUR_NULL)
+					{
+						display_write_block(display_auto_x_coordinate, display_auto_y_coordinate,
+											(display_auto_x_coordinate + display_font_spacing - 1), (display_auto_y_coordinate + display_bitmap_height - 1),
+											display_background_colour);
+					}
+		
+					display_auto_x_coordinate += display_font_spacing;
+				}
+		
+		
+			} //while (next_character > 0x00)
+
+
+			//----------------------------------------------------
+			//----- DISPLAY TRAILING WHITESPACE IF NECESSARY -----
+			//----------------------------------------------------
+			if (trailing_pad_width)
+			{
+				if ((display_background_colour != DISPLAY_COLOUR_NULL) && (!doing_vertical_align_dummy_run))
+				{
+					display_write_block(display_auto_x_coordinate, display_auto_y_coordinate,
+										(display_auto_x_coordinate + trailing_pad_width - 1), (display_auto_y_coordinate + display_bitmap_height - 1),
+										display_background_colour);
+				}
+				display_auto_x_coordinate += trailing_pad_width;
+			}
+
+			//Move down to next line
+			display_last_text_line_y_coordinate = display_auto_y_coordinate;			//Store last line we displayed on for user functions if they need it
+			display_auto_y_coordinate += display_bitmap_height;		
+			
+			if (text_remaining)
+			{
+				//-----------------------------------------
+				//----- THERE IS MORE TEXT TO DISPLAY -----
+				//-----------------------------------------
+				if (display_background_colour != DISPLAY_COLOUR_NULL)
+				{
+					display_write_block(x_start_coord, display_auto_y_coordinate,
+										(x_start_coord + leading_pad_width + string_width + trailing_pad_width - 1), (display_auto_y_coordinate + display_font_inter_line_space - 1),
+										display_background_colour);
+				}
+				display_auto_y_coordinate += display_font_inter_line_space;
+
+				//Check for not out of space
+				if (y_end_coord)
+				{
+					if ((display_auto_y_coordinate + display_bitmap_height +  vertical_padding) > y_end_coord)
+					{
+						text_remaining = 0;					//No more space to display
+						display_auto_y_coordinate -= display_font_inter_line_space;
+					}
 				}
 			}
+		
+		} //while (text_remaining)
+		
+		if (doing_vertical_align_dummy_run)
+		{
+			//---------------------------------------------------
+			//----- NOW DISPLAY FOR REAL VERTICALLY ALIGNED -----
+			//---------------------------------------------------
+			doing_vertical_align_dummy_run = 0;
+
+			if (display_auto_y_coordinate < y_end_coord)
+			{
+				if ((options & DISPLAY_TEXT_VALIGN_MASK) == DISPLAY_TEXT_ALIGN_MIDDLE)
+					vertical_padding_top += (y_end_coord - display_auto_y_coordinate) >> 1;
+				else if ((options & DISPLAY_TEXT_VALIGN_MASK) == DISPLAY_TEXT_ALIGN_BOTTOM)
+					vertical_padding_top += y_end_coord - display_auto_y_coordinate;
+			}
+			
+			p_string_start_of_line = p_string = p_string_copy;
+			display_auto_y_coordinate = y_start_coord;
+			text_remaining = 1;
+			doing_1st_line = 1;
+			continue;
 		}
-	
-	} //while (text_remaining)
+		break;
+	} //while (1)
 
 
 	//-------------------------------------------
