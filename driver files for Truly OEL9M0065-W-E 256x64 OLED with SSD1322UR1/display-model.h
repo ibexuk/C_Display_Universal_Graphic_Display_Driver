@@ -83,8 +83,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 void display_test (void)
 {
 	DWORD_VAL colour;
-	WORD x_coord = 0;
-	WORD count;
+	uint16_t x_coord = 0;
+	uint16_t count;
 
 
 
@@ -253,9 +253,9 @@ void display_test (void)
 //-----------------------------------
 //----- INTERNAL ONLY FUNCTIONS -----
 //-----------------------------------
-void display_delay_ms (WORD delay_ms);
-void display_write_command (BYTE command);
-void display_write_data (BYTE data);
+void display_delay_ms (uint16_t delay_ms);
+void display_write_command (uint8_t command);
+void display_write_data (uint8_t data);
 
 
 //-----------------------------------------
@@ -264,9 +264,9 @@ void display_write_data (BYTE data);
 //(Also defined below as extern)
 void display_model_initialise(void);
 void display_power_down (void);
-void display_set_contrast (BYTE contrast);
-void display_write_pixel (WORD x_coord, WORD y_coord, DWORD colour);
-void display_write_block (WORD x_start_coord, WORD y_start_coord, WORD x_end_coord, WORD y_end_coord, DWORD colour);
+void display_set_contrast (uint8_t contrast);
+void display_write_pixel (uint16_t x_coord, uint16_t y_coord, uint32_t colour);
+void display_write_block (uint16_t x_start_coord, uint16_t y_start_coord, uint16_t x_end_coord, uint16_t y_end_coord, uint32_t colour);
 
 
 #else
@@ -275,9 +275,9 @@ void display_write_block (WORD x_start_coord, WORD y_start_coord, WORD x_end_coo
 //------------------------------
 extern void display_model_initialise(void);
 extern void display_power_down (void);
-extern void display_set_contrast (BYTE contrast);
-extern void display_write_pixel (WORD x_coord, WORD y_coord, DWORD colour);
-extern void display_write_block (WORD x_start_coord, WORD y_start_coord, WORD x_end_coord, WORD y_end_coord, DWORD colour);
+extern void display_set_contrast (uint8_t contrast);
+extern void display_write_pixel (uint16_t x_coord, uint16_t y_coord, uint32_t colour);
+extern void display_write_block (uint16_t x_start_coord, uint16_t y_start_coord, uint16_t x_end_coord, uint16_t y_end_coord, uint32_t colour);
 
 
 #endif

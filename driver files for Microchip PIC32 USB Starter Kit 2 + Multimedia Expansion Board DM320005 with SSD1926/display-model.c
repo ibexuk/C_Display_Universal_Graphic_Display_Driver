@@ -66,9 +66,9 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //***********************************
 //(The accuracy of this function is not important as long as calling with a value of 1 means the delay will
 //be at least 1mS - it is only used for the initialise function)
-void display_delay_ms (WORD delay_ms)
+void display_delay_ms (uint16_t delay_ms)
 {
-	DWORD count;
+	uint32_t count;
 
 	while (delay_ms)
 	{
@@ -92,13 +92,13 @@ void display_delay_ms (WORD delay_ms)
 //****************************************
 void display_model_initialise(void)
 {
-	WORD data;
+	uint16_t data;
 	
 	//##### DEBUG PIN TEST #####
 	//Comment out for normal operation
 	//Can be useful to quickly check each pin for shorts etc.  Each pin is pulsed one by one in a continuous loop so it can be probed with a scope.
 	/*
-	WORD w_temp;
+	uint16_t w_temp;
 	DISPLAY_RESET(0);
 	DISPLAY_CS(1);
 	while (1)
@@ -429,10 +429,10 @@ void display_model_initialise(void)
 //Writes a rectangular block of pixels
 //This function simply writes individual pixels.  If your LCD controller has built in block drawing capabilities you could update this function
 //to use them for improved speed.
-void display_write_block (WORD x_start_coord, WORD y_start_coord, WORD x_end_coord, WORD y_end_coord, DWORD color)
+void display_write_block (uint16_t x_start_coord, uint16_t y_start_coord, uint16_t x_end_coord, uint16_t y_end_coord, uint32_t color)
 {
-	WORD x_coord;
-	WORD y_coord;
+	uint16_t x_coord;
+	uint16_t y_coord;
 
 	DISPLAY_CS(0);
 	
@@ -460,12 +460,12 @@ void display_write_block (WORD x_start_coord, WORD y_start_coord, WORD x_end_coo
 //Assumes DISPLAY_CS is already active
 //color		| null | red | green | blue |
 //This function converts the colour to the display colour data format
-void display_write_pixel (WORD x_coord, WORD y_coord, DWORD color)
+void display_write_pixel (uint16_t x_coord, uint16_t y_coord, uint32_t color)
 {
-	DWORD address = 1;
+	uint32_t address = 1;
 	WORD_VAL w_temp;
 	DWORD_VAL input_color;
-	WORD output_color;
+	uint16_t output_color;
 	
 	//The driver always works with coordinate 0,0 in top left corner.
 	//This function converts the required coordinates to the display address and then writes the pixel.
@@ -484,16 +484,16 @@ void display_write_pixel (WORD x_coord, WORD y_coord, DWORD color)
 	#ifdef DISPLAY_BUS_INTERFACE_IS_BIG_ENDIAN
 		//color is 16 bit:- 5Red|6Green|5Blue (big endian bus to SSD1926)
 		input_color.Val = color;
-		output_color = (WORD)(input_color.v[0] & 0xff) >> 3;		//Blue
-		output_color |= (WORD)(input_color.v[1] & 0xfc) << 3;		//Green
-		output_color |= (WORD)(input_color.v[2] & 0xf8) << 8;		//Red
+		output_color = (uint16_t)(input_color.v[0] & 0xff) >> 3;		//Blue
+		output_color |= (uint16_t)(input_color.v[1] & 0xfc) << 3;		//Green
+		output_color |= (uint16_t)(input_color.v[2] & 0xf8) << 8;		//Red
 	#else
 		//color is 16 bit:- 3GreenL|5Blue|5Red|3GreenH (little endian bus to SSD1926)
 		input_color.Val = color;
-		output_color = (WORD)(input_color.v[0] & 0xf8) << 5;		//Blue
-		output_color |= (WORD)(input_color.v[1] & 0xe0) >> 5;		//Green bits 5:3
-		output_color |= (WORD)(input_color.v[1] & 0x1c) << 11;	//Green bits 2:0
-		output_color |= (WORD)(input_color.v[2] & 0xf8);			//Red
+		output_color = (uint16_t)(input_color.v[0] & 0xf8) << 5;		//Blue
+		output_color |= (uint16_t)(input_color.v[1] & 0xe0) >> 5;		//Green bits 5:3
+		output_color |= (uint16_t)(input_color.v[1] & 0x1c) << 11;	//Green bits 2:0
+		output_color |= (uint16_t)(input_color.v[2] & 0xf8);			//Red
 	#endif
 
 
@@ -501,7 +501,7 @@ void display_write_pixel (WORD x_coord, WORD y_coord, DWORD color)
 	address += (x_coord << 1);
 
 	//----- DO Y COORD -----
-	address += ((DWORD)y_coord * DISPLAY_WIDTH_PIXELS) << 1;
+	address += ((uint32_t)y_coord * DISPLAY_WIDTH_PIXELS) << 1;
 
 	//----- SET ADDRESS -----
 	DISPLAY_REGISTER_SELECT(0);		//Select Command
@@ -553,7 +553,7 @@ void display_write_pixel (WORD x_coord, WORD y_coord, DWORD color)
 //********** SET REGISTER **********
 //**********************************
 //**********************************
-void display_set_register (WORD address, BYTE value)
+void display_set_register (uint16_t address, uint8_t value)
 {
 	DISPLAY_REGISTER_SELECT(0);			//Select command
     DISPLAY_CS(0);	
@@ -620,7 +620,7 @@ void display_set_register (WORD address, BYTE value)
 //************************************
 //************************************
 //Special for this display as it incorporates a controller which needs configuration to bypass it as the Microchip board uses an extern al controller (not a typical situation)
-void display_tcon_ctrl(BYTE mask, BYTE level)
+void display_tcon_ctrl(uint8_t mask, uint8_t level)
 {
     if(level == 0)
         tcon_value &= ~mask;
@@ -631,7 +631,7 @@ void display_tcon_ctrl(BYTE mask, BYTE level)
 }
 
 
-void display_gpio_tcon(WORD index, WORD value)
+void display_gpio_tcon(uint16_t index, uint16_t value)
 {
     display_tcon_ctrl(0x01, 0);
 
@@ -652,9 +652,9 @@ void display_gpio_tcon(WORD index, WORD value)
     display_tcon_delay();
 }
 
-void display_tcon_write_byte(BYTE value)
+void display_tcon_write_byte(uint8_t value)
 {
-    BYTE    mask;
+    uint8_t    mask;
 
     mask = 0x80;
     while(mask)
@@ -678,7 +678,7 @@ void display_tcon_write_byte(BYTE value)
 
 void display_tcon_delay(void)
 {
-    WORD timeOut;
+    uint16_t timeOut;
     
     timeOut = 200;
     while(timeOut--)

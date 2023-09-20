@@ -81,9 +81,9 @@ void display_initialise (void)
 //	White
 void display_test (void)
 {
-	DWORD_VAL colour;
-	WORD x_coord = 0;
-	WORD count;
+	DISPLAY_UINT32_VAL colour;
+	uint16_t x_coord = 0;
+	uint16_t count;
 
 
 
@@ -230,7 +230,7 @@ void display_test (void)
 //********** CLEAR SCREEN **********
 //**********************************
 //**********************************
-void display_clear_screen (DWORD colour)
+void display_clear_screen (uint32_t colour)
 {
 	display_write_block(0, 0, (DISPLAY_WIDTH_PIXELS - 1), (DISPLAY_HEIGHT_PIXELS - 1), colour);
 }
@@ -244,7 +244,7 @@ void display_clear_screen (DWORD colour)
 //***************************************
 //***************************************
 //thickness		Set to 0 to create a rectangle fill
-void display_rectangle (DWORD color, BYTE thickness, WORD x_start_coord, WORD y_start_coord, WORD x_end_coord, WORD y_end_coord)
+void display_rectangle (uint32_t color, uint8_t thickness, uint16_t x_start_coord, uint16_t y_start_coord, uint16_t x_end_coord, uint16_t y_end_coord)
 {
 
 	if (x_start_coord > x_end_coord)
@@ -341,24 +341,24 @@ void display_rectangle (DWORD color, BYTE thickness, WORD x_start_coord, WORD y_
 //Returns				The height of the bitmap displayed
 //After calling			display_auto_x_coordinate = the pixel after the right of the image
 //						display_auto_y_coordinate = the pixel after the bottom pixel of the image
-WORD display_bitmap (CONSTANT BYTE *p_bitmap, WORD x_coord, WORD y_coord, DWORD transparency_colour)
+uint16_t display_bitmap (const uint8_t *p_bitmap, uint16_t x_coord, uint16_t y_coord, uint32_t transparency_colour)
 {
-	BYTE data;
+	uint8_t data;
 	DISPLAY_PROG_MEM_SIZE file_index;
-	DWORD_VAL bitmap_data_offset;
-	WORD_VAL bitmap_width;
-	WORD_VAL bitmap_height;
-	WORD_VAL bits_per_pixel;
-	DWORD_VAL bitmap_data_size;
-	DWORD_VAL number_of_colours;
-	WORD row_index;
-	WORD column_index;
-	BYTE bit_index;
-	BYTE palette_red[256];
-	BYTE palette_green[256];
-	BYTE palette_blue[256];
-	DWORD_VAL colour;
-	WORD count;
+	DISPLAY_UINT32_VAL bitmap_data_offset;
+	DISPLAY_UINT16_VAL bitmap_width;
+	DISPLAY_UINT16_VAL bitmap_height;
+	DISPLAY_UINT16_VAL bits_per_pixel;
+	DISPLAY_UINT32_VAL bitmap_data_size;
+	DISPLAY_UINT32_VAL number_of_colours;
+	uint16_t row_index;
+	uint16_t column_index;
+	uint8_t bit_index;
+	uint8_t palette_red[256];
+	uint8_t palette_green[256];
+	uint8_t palette_blue[256];
+	DISPLAY_UINT32_VAL colour;
+	uint16_t count;
 	
 
 	colour.Val = 0;
@@ -890,28 +890,28 @@ display_bitmap_fail:
 //----- VERSION FOR CONSTANT STRINGS -----
 //----------------------------------------
 //----------------------------------------
-CONSTANT BYTE *display_const_string (CONSTANT BYTE *p_font, WORD options,
-								BYTE horizontal_padding, BYTE vertical_padding,
-								WORD x_start_coord, WORD y_start_coord, WORD x_end_coord, WORD y_end_coord,
-								CONSTANT BYTE *p_string)
+const uint8_t *display_const_string (const uint8_t *p_font, uint16_t options,
+								uint8_t horizontal_padding, uint8_t vertical_padding,
+								uint16_t x_start_coord, uint16_t y_start_coord, uint16_t x_end_coord, uint16_t y_end_coord,
+								const uint8_t *p_string)
 {
-	WORD next_character;
-	CONSTANT BYTE *p_string_start_of_line;
-	CONSTANT BYTE *p_string_end_of_line;
-	CONSTANT BYTE *p_string_last_end_of_word;
-	WORD string_width_at_last_end_of_word;
-	WORD x_start_coord_copy;
-	WORD w_temp;
-	WORD string_width;
-	BYTE text_remaining = 1;
-	WORD max_width;
-	WORD min_width;
-	WORD leading_pad_width;
-	WORD trailing_pad_width;
-	BYTE doing_1st_line = 1;
-	BYTE doing_vertical_align_dummy_run = 0;
-	WORD vertical_padding_top = vertical_padding;			//Used for vertical align
-	CONSTANT BYTE *p_string_copy;
+	uint16_t next_character;
+	const uint8_t *p_string_start_of_line;
+	const uint8_t *p_string_end_of_line;
+	const uint8_t *p_string_last_end_of_word;
+	uint16_t string_width_at_last_end_of_word;
+	uint16_t x_start_coord_copy;
+	uint16_t w_temp;
+	uint16_t string_width;
+	uint8_t text_remaining = 1;
+	uint16_t max_width;
+	uint16_t min_width;
+	uint16_t leading_pad_width;
+	uint16_t trailing_pad_width;
+	uint8_t doing_1st_line = 1;
+	uint8_t doing_vertical_align_dummy_run = 0;
+	uint16_t vertical_padding_top = vertical_padding;			//Used for vertical align
+	const uint8_t *p_string_copy;
 
 
 	p_string_copy = p_string;
@@ -1314,11 +1314,11 @@ CONSTANT BYTE *display_const_string (CONSTANT BYTE *p_font, WORD options,
 //----- GET NEXT CHARACTER -----
 //------------------------------
 //Check for multi byte encoded characters
-CONSTANT BYTE *display_const_string_get_next_char(CONSTANT BYTE *p_string, WORD (*next_character))
+const uint8_t *display_const_string_get_next_char(const uint8_t *p_string, uint16_t (*next_character))
 {
-	BYTE b_temp;
+	uint8_t b_temp;
 	
-	(*next_character) = (WORD)*p_string++;
+	(*next_character) = (uint16_t)*p_string++;
 
 	if (((*next_character) == '&') && (*p_string == '#'))
 	{
@@ -1361,15 +1361,15 @@ CONSTANT BYTE *display_const_string_get_next_char(CONSTANT BYTE *p_string, WORD 
 			(*next_character) &= 0x000f;
 			(*next_character) <<= 12;
 			
-			(*next_character) |= (WORD)(*p_string++ & 0x3f) << 6;
-			(*next_character) |= (WORD)(*p_string++ & 0x3f);
+			(*next_character) |= (uint16_t)(*p_string++ & 0x3f) << 6;
+			(*next_character) |= (uint16_t)(*p_string++ & 0x3f);
 		}
 		else
 		{
 			(*next_character) &= 0x001f;
 			(*next_character) <<= 6;
 			
-			(*next_character) |= (WORD)(*p_string++ & 0x3f);
+			(*next_character) |= (uint16_t)(*p_string++ & 0x3f);
 		}
 	}
 	return(p_string);
@@ -1382,29 +1382,29 @@ CONSTANT BYTE *display_const_string_get_next_char(CONSTANT BYTE *p_string, WORD 
 //----- VERSION FOR VARIABLE STRINGS -----
 //----------------------------------------
 //----------------------------------------
-//(An exact copy of the constant funcitons but with BYTE* instead of CONSTANT BYTE* for p_string) 
-CONSTANT BYTE *display_variable_string (CONSTANT BYTE *p_font, WORD options,
-								BYTE horizontal_padding, BYTE vertical_padding,
-								WORD x_start_coord, WORD y_start_coord, WORD x_end_coord, WORD y_end_coord,
-								BYTE *p_string)
+//(An exact copy of the constant funcitons but with uint8_t* instead of const uint8_t* for p_string) 
+const uint8_t *display_variable_string (const uint8_t *p_font, uint16_t options,
+								uint8_t horizontal_padding, uint8_t vertical_padding,
+								uint16_t x_start_coord, uint16_t y_start_coord, uint16_t x_end_coord, uint16_t y_end_coord,
+								uint8_t *p_string)
 {
-	WORD next_character;
-	BYTE *p_string_start_of_line;
-	BYTE *p_string_end_of_line;
-	BYTE *p_string_last_end_of_word;
-	WORD string_width_at_last_end_of_word;
-	WORD x_start_coord_copy;
-	WORD w_temp;
-	WORD string_width;
-	BYTE text_remaining = 1;
-	WORD max_width;
-	WORD min_width;
-	WORD leading_pad_width;
-	WORD trailing_pad_width;
-	BYTE doing_1st_line = 1;
-	BYTE doing_vertical_align_dummy_run = 0;
-	WORD vertical_padding_top = vertical_padding;			//Used for vertical align
-	BYTE *p_string_copy;
+	uint16_t next_character;
+	uint8_t *p_string_start_of_line;
+	uint8_t *p_string_end_of_line;
+	uint8_t *p_string_last_end_of_word;
+	uint16_t string_width_at_last_end_of_word;
+	uint16_t x_start_coord_copy;
+	uint16_t w_temp;
+	uint16_t string_width;
+	uint8_t text_remaining = 1;
+	uint16_t max_width;
+	uint16_t min_width;
+	uint16_t leading_pad_width;
+	uint16_t trailing_pad_width;
+	uint8_t doing_1st_line = 1;
+	uint8_t doing_vertical_align_dummy_run = 0;
+	uint16_t vertical_padding_top = vertical_padding;			//Used for vertical align
+	uint8_t *p_string_copy;
 
 
 	p_string_copy = p_string;
@@ -1804,11 +1804,11 @@ CONSTANT BYTE *display_variable_string (CONSTANT BYTE *p_font, WORD options,
 //----- GET NEXT CHARACTER -----
 //------------------------------
 //Check for multi byte encoded characters
-BYTE *display_variable_string_get_next_char(BYTE *p_string, WORD *next_character)
+uint8_t *display_variable_string_get_next_char(uint8_t *p_string, uint16_t *next_character)
 {
-	BYTE b_temp;
+	uint8_t b_temp;
 	
-	(*next_character) = (WORD)*p_string++;
+	(*next_character) = (uint16_t)*p_string++;
 
 	if (((*next_character) == '&') && (*p_string == '#'))
 	{
@@ -1851,15 +1851,15 @@ BYTE *display_variable_string_get_next_char(BYTE *p_string, WORD *next_character
 			(*next_character) &= 0x000f;
 			(*next_character) <<= 12;
 			
-			(*next_character) |= (WORD)(*p_string++ & 0x3f) << 6;
-			(*next_character) |= (WORD)(*p_string++ & 0x3f);
+			(*next_character) |= (uint16_t)(*p_string++ & 0x3f) << 6;
+			(*next_character) |= (uint16_t)(*p_string++ & 0x3f);
 		}
 		else
 		{
 			(*next_character) &= 0x001f;
 			(*next_character) <<= 6;
 			
-			(*next_character) |= (WORD)(*p_string++ & 0x3f);
+			(*next_character) |= (uint16_t)(*p_string++ & 0x3f);
 		}
 	}
 	return(p_string);
@@ -1875,9 +1875,9 @@ BYTE *display_variable_string_get_next_char(BYTE *p_string, WORD *next_character
 //*******************************
 //*******************************
 //(Note that the BitFontCreatorPro file bfctype.h contains the definition of the BitFontCreatorPro binary file structure refered to in this function)
-void display_load_font (CONSTANT BYTE *p_font)
+void display_load_font (const uint8_t *p_font)
 {
-	BYTE data;
+	uint8_t data;
 	
 
 	display_font_start_address = 0;
@@ -1923,16 +1923,16 @@ void display_load_font (CONSTANT BYTE *p_font)
 	
 	//FLAGS [2]
 	display_font_creation_flags = DISPLAY_FONT_READ_NEXT_BYTE;
-	display_font_creation_flags |= (WORD)DISPLAY_FONT_READ_NEXT_BYTE << 8;
+	display_font_creation_flags |= (uint16_t)DISPLAY_FONT_READ_NEXT_BYTE << 8;
 
 	//WIDTH [2]
 	//0 for variable-width fonts
 	display_bitmap_width = DISPLAY_FONT_READ_NEXT_BYTE;
-	display_bitmap_width |= (WORD)DISPLAY_FONT_READ_NEXT_BYTE << 8;
+	display_bitmap_width |= (uint16_t)DISPLAY_FONT_READ_NEXT_BYTE << 8;
 
 	//HEIGHT [2]
 	display_bitmap_height = DISPLAY_FONT_READ_NEXT_BYTE;
-	display_bitmap_height |= (WORD)DISPLAY_FONT_READ_NEXT_BYTE << 8;
+	display_bitmap_height |= (uint16_t)DISPLAY_FONT_READ_NEXT_BYTE << 8;
 	
 	//ASCENT [2]
 	//Ignore
@@ -1941,11 +1941,11 @@ void display_load_font (CONSTANT BYTE *p_font)
 	
 	//FIRST CHARACTER [2]
 	display_font_first_character = DISPLAY_FONT_READ_NEXT_BYTE;
-	display_font_first_character |= (WORD)DISPLAY_FONT_READ_NEXT_BYTE << 8;
+	display_font_first_character |= (uint16_t)DISPLAY_FONT_READ_NEXT_BYTE << 8;
 	
 	//LAST CHARACTER [2]
 	display_font_last_character = DISPLAY_FONT_READ_NEXT_BYTE;
-	display_font_last_character |= (WORD)DISPLAY_FONT_READ_NEXT_BYTE << 8;
+	display_font_last_character |= (uint16_t)DISPLAY_FONT_READ_NEXT_BYTE << 8;
 
 	//CHARACTER IN FONT [2]
 	//Ignore
@@ -1969,21 +1969,21 @@ void display_load_font (CONSTANT BYTE *p_font)
 	
 	//DATA TABLE POINTER [4]
 	display_font_data_table_address = DISPLAY_FONT_READ_NEXT_BYTE;
-	display_font_data_table_address |= (DWORD)DISPLAY_FONT_READ_NEXT_BYTE << 8;
-	display_font_data_table_address |= (DWORD)DISPLAY_FONT_READ_NEXT_BYTE << 16;
-	display_font_data_table_address |= (DWORD)DISPLAY_FONT_READ_NEXT_BYTE << 24;
+	display_font_data_table_address |= (uint32_t)DISPLAY_FONT_READ_NEXT_BYTE << 8;
+	display_font_data_table_address |= (uint32_t)DISPLAY_FONT_READ_NEXT_BYTE << 16;
+	display_font_data_table_address |= (uint32_t)DISPLAY_FONT_READ_NEXT_BYTE << 24;
 	
 	//OFFSET TABLE POINTER [4]
 	display_font_offset_table_address = DISPLAY_FONT_READ_NEXT_BYTE;
-	display_font_offset_table_address |= (DWORD)DISPLAY_FONT_READ_NEXT_BYTE << 8;
-	display_font_offset_table_address |= (DWORD)DISPLAY_FONT_READ_NEXT_BYTE << 16;
-	display_font_offset_table_address |= (DWORD)DISPLAY_FONT_READ_NEXT_BYTE << 24;
+	display_font_offset_table_address |= (uint32_t)DISPLAY_FONT_READ_NEXT_BYTE << 8;
+	display_font_offset_table_address |= (uint32_t)DISPLAY_FONT_READ_NEXT_BYTE << 16;
+	display_font_offset_table_address |= (uint32_t)DISPLAY_FONT_READ_NEXT_BYTE << 24;
 	
 	//WIDTH TABLE POINTER [4]
 	display_font_width_table_address = DISPLAY_FONT_READ_NEXT_BYTE;
-	display_font_width_table_address |= (DWORD)DISPLAY_FONT_READ_NEXT_BYTE << 8;
-	display_font_width_table_address |= (DWORD)DISPLAY_FONT_READ_NEXT_BYTE << 16;
-	display_font_width_table_address |= (DWORD)DISPLAY_FONT_READ_NEXT_BYTE << 24;
+	display_font_width_table_address |= (uint32_t)DISPLAY_FONT_READ_NEXT_BYTE << 8;
+	display_font_width_table_address |= (uint32_t)DISPLAY_FONT_READ_NEXT_BYTE << 16;
+	display_font_width_table_address |= (uint32_t)DISPLAY_FONT_READ_NEXT_BYTE << 24;
 
 	//ASCII TABLE POINTER [4]
 	//Ignore
@@ -1994,9 +1994,9 @@ void display_load_font (CONSTANT BYTE *p_font)
 	
 	//EXTENDED INDEX TABLE POINTER [4]
 	display_font_extended_index_table_address = DISPLAY_FONT_READ_NEXT_BYTE;
-	display_font_extended_index_table_address |= (DWORD)DISPLAY_FONT_READ_NEXT_BYTE << 8;
-	display_font_extended_index_table_address |= (DWORD)DISPLAY_FONT_READ_NEXT_BYTE << 16;
-	display_font_extended_index_table_address |= (DWORD)DISPLAY_FONT_READ_NEXT_BYTE << 24;
+	display_font_extended_index_table_address |= (uint32_t)DISPLAY_FONT_READ_NEXT_BYTE << 8;
+	display_font_extended_index_table_address |= (uint32_t)DISPLAY_FONT_READ_NEXT_BYTE << 16;
+	display_font_extended_index_table_address |= (uint32_t)DISPLAY_FONT_READ_NEXT_BYTE << 24;
 
 
 	
@@ -2036,14 +2036,14 @@ void display_load_font (CONSTANT BYTE *p_font)
 //character
 //	The unicode character code
 //(Note that the BitFontCreatorPro file bfctype.h contains the definition of the BitFontCreatorPro binary file structure refered to in this function)
-void display_get_font_character (WORD character)
+void display_get_font_character (uint16_t character)
 {
-	WORD index;
-	WORD ranges_count;
-	WORD count;
-	WORD start_character;
-	WORD characters_count;
-	DWORD offset;
+	uint16_t index;
+	uint16_t ranges_count;
+	uint16_t count;
+	uint16_t start_character;
+	uint16_t characters_count;
+	uint32_t offset;
 
 		if((character < display_font_first_character) || (character > display_font_last_character))
 	{
@@ -2074,13 +2074,13 @@ void display_get_font_character (WORD character)
 
 	//nRanges [2]
 	ranges_count = DISPLAY_FONT_READ_NEXT_BYTE;
-	ranges_count |= (WORD)DISPLAY_FONT_READ_NEXT_BYTE << 8;
+	ranges_count |= (uint16_t)DISPLAY_FONT_READ_NEXT_BYTE << 8;
 
 	//*pRanges [4] (pointer to the first range)
 	offset = DISPLAY_FONT_READ_NEXT_BYTE;
-	offset |= (DWORD)DISPLAY_FONT_READ_NEXT_BYTE << 8;
-	offset |= (DWORD)DISPLAY_FONT_READ_NEXT_BYTE << 16;
-	offset |= (DWORD)DISPLAY_FONT_READ_NEXT_BYTE << 24;
+	offset |= (uint32_t)DISPLAY_FONT_READ_NEXT_BYTE << 8;
+	offset |= (uint32_t)DISPLAY_FONT_READ_NEXT_BYTE << 16;
+	offset |= (uint32_t)DISPLAY_FONT_READ_NEXT_BYTE << 24;
 	DISPLAY_FONT_SET_READ_ADDRESS(display_font_start_address + offset);
 
 	//READ EACH CHARACTER RANGES (GLYPH_RANGE array)
@@ -2090,11 +2090,11 @@ void display_get_font_character (WORD character)
 		
 		//charLow [2] (first character code in this range)
 		start_character = DISPLAY_FONT_READ_NEXT_BYTE;
-		start_character |= (WORD)DISPLAY_FONT_READ_NEXT_BYTE << 8;
+		start_character |= (uint16_t)DISPLAY_FONT_READ_NEXT_BYTE << 8;
 	
 		//nGlyphs [2] (# characters in this range)
 		characters_count = DISPLAY_FONT_READ_NEXT_BYTE;
-		characters_count |= (WORD)DISPLAY_FONT_READ_NEXT_BYTE << 8;
+		characters_count |= (uint16_t)DISPLAY_FONT_READ_NEXT_BYTE << 8;
 		
 		if(character < (start_character + characters_count))
 		{
@@ -2123,7 +2123,7 @@ display_get_font_character1:
 	{
 		DISPLAY_FONT_SET_READ_ADDRESS(display_font_start_address + display_font_width_table_address + (index << 1));
 		display_bitmap_width = DISPLAY_FONT_READ_NEXT_BYTE;
-		display_bitmap_width |= (WORD)DISPLAY_FONT_READ_NEXT_BYTE << 8;
+		display_bitmap_width |= (uint16_t)DISPLAY_FONT_READ_NEXT_BYTE << 8;
 	}
 
 
@@ -2133,9 +2133,9 @@ display_get_font_character1:
 	//-------------------------------------------------
 	DISPLAY_FONT_SET_READ_ADDRESS(display_font_start_address + display_font_offset_table_address + (index << 2));
 	offset = DISPLAY_FONT_READ_NEXT_BYTE;
-	offset |= (DWORD)DISPLAY_FONT_READ_NEXT_BYTE << 8;
-	offset |= (DWORD)DISPLAY_FONT_READ_NEXT_BYTE << 16;
-	offset |= (DWORD)DISPLAY_FONT_READ_NEXT_BYTE << 24;
+	offset |= (uint32_t)DISPLAY_FONT_READ_NEXT_BYTE << 8;
+	offset |= (uint32_t)DISPLAY_FONT_READ_NEXT_BYTE << 16;
+	offset |= (uint32_t)DISPLAY_FONT_READ_NEXT_BYTE << 24;
 	
 	DISPLAY_FONT_SET_READ_ADDRESS(display_font_start_address + display_font_data_table_address + offset);
 	
@@ -2159,12 +2159,12 @@ display_get_font_character1:
 
 void display_character (void)
 {
-	WORD x_coord;
-	WORD y_coord;
-	WORD row_count;
-	WORD column_count;
-	BYTE bit_pointer;
-	BYTE data;
+	uint16_t x_coord;
+	uint16_t y_coord;
+	uint16_t row_count;
+	uint16_t column_count;
+	uint8_t bit_pointer;
+	uint8_t data;
 	
 		
 	data = DISPLAY_FONT_READ_NEXT_BYTE;
@@ -2239,16 +2239,16 @@ void display_character (void)
 //search_for_filename	The available files will be searched to see if any match this filename.
 //Returns				1 if the file was found and DISPLAY_FILE_SET_READ_ADDRESS was used to setup its address (i.e. p_bitmap can be set to 0 when calling display_bitmap() ),
 //						0 if not
-BYTE display_find_file (BYTE *search_for_filename)
+uint8_t display_find_file (uint8_t *search_for_filename)
 {
 #ifdef DISPLAY_BITMAP_SET_READ_ADDRESS
 
-	BYTE file_count;
-	BYTE b_count;
-	BYTE filename_matches;
-	BYTE next_character;
-	CONSTANT BYTE *p_file;
-	BYTE data;
+	uint8_t file_count;
+	uint8_t b_count;
+	uint8_t filename_matches;
+	uint8_t next_character;
+	const uint8_t *p_file;
+	uint8_t data;
 	DISPLAY_PROG_MEM_SIZE file_index;
 
 

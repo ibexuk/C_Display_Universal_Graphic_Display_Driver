@@ -67,9 +67,9 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //***********************************
 //(The accuracy of this function is not important as long as calling with a value of 1 means the delay will
 //be at least 1mS - it is only used for the initialise function)
-void display_delay_ms (WORD delay_ms)
+void display_delay_ms (uint16_t delay_ms)
 {
-	DWORD count;
+	uint32_t count;
 
 	while (delay_ms)
 	{
@@ -99,7 +99,7 @@ void display_model_initialise(void)
 	//Comment out for normal operation
 	//Can be useful to quickly check each pin for shorts etc.  Each pin is pulsed one by one in a continuous loop so it can be probed with a scope.
 	/*
-	BYTE b_temp;
+	uint8_t b_temp;
 	DISPLAY_RESET(0);
 	DISPLAY_CS(1);
 	while (1)
@@ -288,7 +288,7 @@ void display_power_down (void)
 //**********************************
 //**********************************
 //0x00 - 0xff
-void display_set_contrast (BYTE contrast)
+void display_set_contrast (uint8_t contrast)
 {
 	DISPLAY_CS(0);
 	display_write_command(0xC1);			//Contrast set
@@ -305,10 +305,10 @@ void display_set_contrast (BYTE contrast)
 //Writes a rectangular block of pixels
 //This function simply writes individual pixels.  If your LCD controller has built in block drawing capabilities you could update this function
 //to use them for improved speed.
-void display_write_block (WORD x_start_coord, WORD y_start_coord, WORD x_end_coord, WORD y_end_coord, DWORD colour)
+void display_write_block (uint16_t x_start_coord, uint16_t y_start_coord, uint16_t x_end_coord, uint16_t y_end_coord, uint32_t colour)
 {
-	WORD x_coord;
-	WORD y_coord;
+	uint16_t x_coord;
+	uint16_t y_coord;
 
 	DISPLAY_CS(0);
 	DISPLAY_DATA_TO_OUTPUTS();
@@ -337,14 +337,14 @@ void display_write_block (WORD x_start_coord, WORD y_start_coord, WORD x_end_coo
 //Assumes DISPLAY_CS is already active
 //colour	| null | red | green | blue |
 //This function converts the colour to the display colour data format
-void display_write_pixel (WORD x_coord, WORD y_coord, DWORD colour)
+void display_write_pixel (uint16_t x_coord, uint16_t y_coord, uint32_t colour)
 {
-	BYTE x_coord_use;
-	BYTE y_coord_use;
+	uint8_t x_coord_use;
+	uint8_t y_coord_use;
 	DWORD_VAL input_colour;
-	BYTE output_colour;
-	BYTE data0;
-	BYTE data1;
+	uint8_t output_colour;
+	uint8_t data0;
+	uint8_t data1;
 	
 	//The driver always works with coordinate 0,0 in top left corner.
 	//This function converts the required coordinates to the display address and then writes the pixel.
@@ -477,7 +477,7 @@ void display_write_pixel (WORD x_coord, WORD y_coord, DWORD colour)
 //*********** WRITE COMMAND **********
 //************************************
 //************************************
-void display_write_command (BYTE command)
+void display_write_command (uint8_t command)
 {
 	DISPLAY_REGISTER_SELECT(0);		//Command
 	
@@ -495,7 +495,7 @@ void display_write_command (BYTE command)
 //*********** WRITE DATA **********
 //*********************************
 //*********************************
-void display_write_data (BYTE data)
+void display_write_data (uint8_t data)
 {
 	DISPLAY_REGISTER_SELECT(1);		//Data
 	

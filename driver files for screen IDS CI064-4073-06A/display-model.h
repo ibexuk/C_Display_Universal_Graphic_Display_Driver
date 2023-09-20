@@ -32,24 +32,28 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //----------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------
 //---------- THIS FILE CONTAINS SCREEN & DRIVER MODEL SPECIFIC FUNCTIONS FOR	----------
-//---------- SCREEN:		Midas MCCOG240160B6W-FPTLW							----------
-//---------- Resolution:	240 x 160 pixel										----------
-//---------- Driver IC:		UC1698U (internal)									----------
+//---------- SCREEN:		Intelligent Display Solutions: CI064-4073-06A		----------
+//---------- Resolution:	256 x 128 pixel										----------
+//---------- Driver IC:		UC1611S (internal)									----------
 //---------- Colour:		1bit (monochrome)									----------
 //---------- Interface:		8bit Parallel										----------
 //----------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------
 
-//This screen is a problem because there are 3 pixels in each 2 byte word sent to the display it doesn't make sense to
-//do this as each pixel is written because you'd end up with tripple the wanted number of writes and each with the address
+//This screen is a problem because there are 8 pixels in each 1 byte word sent to the display it doesn't make sense to
+//do this as each pixel is written because you'd end up with 8x the wanted number of writes and each with the address
 //also needing to be written each time!
 //Instead we use a local ram buffer and call this to output to the screen: display_output_buffer()
 
 
+//The UC1611s driver chip is wired inside the display with BM1 connected to VDD, so 16-bit operation is not used. CS1=H hardwired internally.
+//This driver is designed for D15, D13 and BM0 connected to 0V so that 8-bit 8080 mode is selected.
+
+
 //Coordinates are always 0,0 in top left corner.  Our screen in landscape:
-//0,0		239,0
-//0,159		239,159
+//0,0		255,0
+//0,127		255,127
 
 
 
@@ -71,22 +75,23 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #ifndef DISPLAY_MODEL_C_INIT				//(Include this section only once for each source file that includes this header file)
 #define	DISPLAY_MODEL_C_INIT
 
-#define DISPLAY_DEFAULT_CONTRAST			40
+#define DISPLAY_DEFAULT_CONTRAST			160
 
 
 //----------------------------------------------
 //----- DEFINE TARGET COMPILER & PROCESSOR -----
 //----------------------------------------------
 //(ONLY 1 SHOULD BE INCLUDED, COMMENT OUT OTHERS)
-#define	DISPLAY_USING_MICROCHIP_C32_COMPILER
+//#define	DISPLAY_USING_MICROCHIP_C32_COMPILER
+#define	DISPLAY_USING_MICROCHIP_XC32_COMPILER
 //<< add other compiler types here
 
 
 //-------------------------
 //----- DISPLAY SETUP -----
 //-------------------------
-#define	DISPLAY_WIDTH_PIXELS			240			//Width is the X coordinate
-#define	DISPLAY_HEIGHT_PIXELS			160			//Height is the Y coordinate
+#define	DISPLAY_WIDTH_PIXELS			256			//Width is the X coordinate
+#define	DISPLAY_HEIGHT_PIXELS			128			//Height is the Y coordinate
 
 
 //------------------------
@@ -101,7 +106,6 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //##### USING MICROCHIP C32 COMPILER #####
 //########################################
 //########################################
-
 
 //----------------------
 //----- IO DEFINES -----
@@ -124,18 +128,61 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #define	DISPLAY_READ_DATA(data)				DISPLAY_RD(0); DISPLAY_BUS_ACCESS_DELAY; data = (uint8_t)(mPORTERead() & 0x000000ff); DISPLAY_RD(1)	//Write 8bit word to controller
 
 
-
-
-
-
-
-
 //###############################################
 //###############################################
 //##### END OF USING MICROCHIP C32 COMPILER #####
 //###############################################
 //###############################################
 #endif		//#ifdef DISPLAY_USING_MICROCHIP_C32_COMPILER
+
+
+
+
+#ifdef DISPLAY_USING_MICROCHIP_XC32_COMPILER
+//#########################################
+//#########################################
+//##### USING MICROCHIP XC32 COMPILER #####
+//#########################################
+//#########################################
+
+//----------------------
+//----- IO DEFINES -----
+//----------------------
+
+#define	DISPLAY_BUS_ACCESS_DELAY	Nop(); Nop(); Nop(); Nop(); Nop()		//('Nop();' is a single cycle null instruction for the C32 compiler, include multiple times if required)
+
+//CONTROL PINS:-
+#define DISPLAY_CS(state)					LATJbits.LATJ8 = state				//CS0. 0 = select controller
+#define DISPLAY_CONTROL_DATA(state)			LATJbits.LATJ9 = state				//CD. 0 = Command, 1=Data
+#define	DISPLAY_RESET(state)				LATCbits.LATC1 = state				//0 = reset controller
+#define DISPLAY_RD(state)					LATDbits.LATD9 = state				//WR1. 0 = read (in 8080 mode)
+#define DISPLAY_WR(state)					LATAbits.LATA4 = state				//WR0. 0 = WRITE (in 8080 mode)
+
+//PORTS:-
+#define	DISPLAY_DATA_TO_OUTPUTS()			TRISECLR = (uint32_t)0x00ff
+#define	DISPLAY_DATA_TO_INPUTS()			TRISESET = (uint32_t)0x00ff; 
+#define	DISPLAY_WRITE_DATA(data)			LATESET = (uint32_t)data; LATECLR = (uint32_t)~data; DISPLAY_WR(0); DISPLAY_BUS_ACCESS_DELAY; DISPLAY_WR(1)	//Write 8bit word to controller
+#define	DISPLAY_READ_DATA_DO_DUMMY(data)	DISPLAY_RD(0); DISPLAY_BUS_ACCESS_DELAY; DISPLAY_RD(1)	//Write 8bit word to controller
+#define	DISPLAY_READ_DATA(data)				DISPLAY_RD(0); DISPLAY_BUS_ACCESS_DELAY; data = (uint8_t)(PORTE & 0x000000ff); DISPLAY_RD(1)	//Read 8bit word from controller
+
+
+//-----------------------------------
+//----- BUS ACCESS DELAY DEFINE -----
+//-----------------------------------
+//Depending on the speed of your processor and bus you may need to use a delay when reading and writing to and from the controller.
+//Use this define to do this.
+//Need min 75nS
+#define	DISPLAY_BUS_ACCESS_DELAY	asm("nop"); asm("nop"); asm("nop"); asm("nop"); asm("nop"); asm("nop"); asm("nop"); asm("nop"); asm("nop"); asm("nop"); asm("nop"); asm("nop"); asm("nop"); asm("nop"); asm("nop"); asm("nop"); asm("nop"); asm("nop"); asm("nop"); asm("nop")		//(nop is a single cycle null instruction, include multiple times if required)
+
+
+
+//################################################
+//################################################
+//##### END OF USING MICROCHIP XC32 COMPILER #####
+//################################################
+//################################################
+#endif		//#ifdef DISPLAY_USING_MICROCHIP_XC32_COMPILER
+
 
 
 
@@ -196,7 +243,7 @@ void display_output_buffer (void);
 //--------------------------------------------
 //----- INTERNAL ONLY MEMORY DEFINITIONS -----
 //--------------------------------------------
-uint8_t display_copy_buffer[((DISPLAY_WIDTH_PIXELS * DISPLAY_HEIGHT_PIXELS) >> 3)];		//240x160 = 4800 bytes
+uint8_t display_copy_buffer[((DISPLAY_WIDTH_PIXELS * DISPLAY_HEIGHT_PIXELS) >> 3)];		//256x128 = 4096 bytes
 
 //--------------------------------------------------
 //----- INTERNAL & EXTERNAL MEMORY DEFINITIONS -----

@@ -170,11 +170,11 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //-----------------------------------
 //----- INTERNAL ONLY FUNCTIONS -----
 //-----------------------------------
-void display_delay_ms (WORD delay_ms);
-void display_set_register (WORD index, BYTE value);
-void display_tcon_ctrl(BYTE mask, BYTE level);
-void display_gpio_tcon(WORD index, WORD value);
-void display_tcon_write_byte(BYTE value);
+void display_delay_ms (uint16_t delay_ms);
+void display_set_register (uint16_t index, uint8_t value);
+void display_tcon_ctrl(uint8_t mask, uint8_t level);
+void display_gpio_tcon(uint16_t index, uint16_t value);
+void display_tcon_write_byte(uint8_t value);
 void display_tcon_delay(void);
 
 
@@ -183,8 +183,8 @@ void display_tcon_delay(void);
 //-----------------------------------------
 //(Also defined below as extern)
 void display_model_initialise(void);
-void display_write_pixel (WORD x_coord, WORD y_coord, DWORD color);
-void display_write_block (WORD x_start_coord, WORD y_start_coord, WORD x_end_coord, WORD y_end_coord, DWORD color);
+void display_write_pixel (uint16_t x_coord, uint16_t y_coord, uint32_t color);
+void display_write_block (uint16_t x_start_coord, uint16_t y_start_coord, uint16_t x_end_coord, uint16_t y_end_coord, uint32_t color);
 
 
 #else
@@ -192,8 +192,8 @@ void display_write_block (WORD x_start_coord, WORD y_start_coord, WORD x_end_coo
 //----- EXTERNAL FUNCTIONS -----
 //------------------------------
 extern void display_model_initialise(void);
-extern void display_write_pixel (WORD x_coord, WORD y_coord, DWORD color);
-extern void display_write_block (WORD x_start_coord, WORD y_start_coord, WORD x_end_coord, WORD y_end_coord, DWORD color);
+extern void display_write_pixel (uint16_t x_coord, uint16_t y_coord, uint32_t color);
+extern void display_write_block (uint16_t x_start_coord, uint16_t y_start_coord, uint16_t x_end_coord, uint16_t y_end_coord, uint32_t color);
 
 
 #endif
@@ -210,7 +210,7 @@ extern void display_write_block (WORD x_start_coord, WORD y_start_coord, WORD x_
 //--------------------------------------------
 //----- INTERNAL ONLY MEMORY DEFINITIONS -----
 //--------------------------------------------
-BYTE tcon_value;
+uint8_t tcon_value;
 
 
 //--------------------------------------------------

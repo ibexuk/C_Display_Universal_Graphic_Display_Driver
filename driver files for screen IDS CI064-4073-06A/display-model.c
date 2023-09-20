@@ -69,6 +69,9 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //be at least 1mS - it is only used for the initialise function)
 void display_delay_ms (uint16_t delay_ms)
 {
+#ifdef DISPLAY_USING_MICROCHIP_XC32_COMPILER
+	CORETIMER_DelayMs(delay_ms);
+#else
 	uint32_t count;
 
 	while (delay_ms)
@@ -81,8 +84,8 @@ void display_delay_ms (uint16_t delay_ms)
 		}
 		delay_ms--;
 	}
+#endif
 }
-
 
 
 
@@ -113,64 +116,43 @@ void display_model_initialise(void)
 
 	DISPLAY_RESET(1);							//Set high to run
 
-	display_delay_ms(10);
+	//display_delay_ms(10);
+	display_delay_ms(150);						//150mS specified in UC1611S datasheet examples
 
 	//----- PAUSE #mS BEFORE ENABLING V0 (The negative driver voltage) -----
 	//(Not necessary for this screen)
 
 	//----- DO THE CONFIGURATION COMMAND SEQUENCE -----
-	display_write_command(0xe2);				//System Reset
-	display_delay_ms(1);
-	display_delay_ms(1);
 
-	display_write_command(0x28 | 3);			//0x28 = power control command (13nF<LCD<=22nF; Internal Vlcd(*10))
-	display_delay_ms(1);
+    display_write_command(0x24);		//Set temp Comp
+	
+    display_write_command(0x2b);		//Set panel loading
+	
+    display_write_command(0x2f);		//Set pump control
+	
+    display_write_command(0x81);		//Set potentiometer
+    display_write_command(DISPLAY_DEFAULT_CONTRAST);			//Value
+	
+    display_write_command(0xa3);		//Set Line Rate
+	
+    display_write_command(0xc0);		//Set LCD Map control
+	
+    display_write_command(0x02);		//Inversion
+	
+    display_write_command(0xd3);		//Set display pattern
+	
+    display_write_command(0xe9);		//LCD Bias Ratio
+	
+    display_write_command(0x89);		//RAM Address Control
 
-	display_write_command(0x24 | 1);			//0x24 = temperature control (-0.05%/C)
-	display_delay_ms(1);
-
-	display_write_command(0xc0 | 2);			//0x20 = LCD Mappiing Control (SEG1-->SEG384; COM160-->COM1)
-	display_delay_ms(1);
-
-	display_write_command(0x88 | 3);			//0x88 = RAM Address Control (up to down, automatically +1)
-	display_delay_ms(100);
-
-	display_write_command(0xD0 | 0);			//Color Pattern (B-G-R-B-G-R...)
-	display_delay_ms(1);
-
-	display_write_command(0xD4 | 2);			//Color Mode (64K color, R4--R0,G5--G0,B4--B0)
-	display_delay_ms(1);
-
-	display_write_command(0xD8 | 5);			//COM Scan Function (LRC: AEBCD--AEBCD;  Disable FRC;   Enable SEG PWM)
-	display_delay_ms(1);
-
-	display_write_command(0xA0 | 1);			//Line Rate (Frame frequency 30.5 KIPS)
-	display_delay_ms(1);
-
-	display_write_command(0xE8 | 3);			//LCD Bias Ratio (Bias 1/12)
-	display_delay_ms(1);
-
-	display_write_command(0x81);				//Set Vbias Potentiometer
-	display_delay_ms(1);
-	display_write_command(35);					//(0~255 for selection)
-	display_delay_ms(1);
-
-	display_write_command(0xF1);				//Set COM End
-	display_delay_ms(1);
-	display_write_command(159);
-	display_delay_ms(1);
-
-	display_write_command(0xC8);				//Set N-Line Inversion
-	display_delay_ms(1);
-	display_write_command(0x00);				//(Disable NIV)
-	display_delay_ms(1);
-
-	display_write_command(0x84);				//Set Partial Display Control (Disable Partical function)
-	display_delay_ms(1);
-	display_write_command(0xA6);				//Set Inverse Display (Normal display)
-	display_delay_ms(1);
-	display_write_command(0xAD);				//Set Display Enable (Disable Sleep; Disable Green enhance; Disable gray scale)
-	display_delay_ms(1);
+    display_write_command(0xf1);		//Set Com End
+    display_write_command(127);			//Set to 127
+	
+    display_write_command(0xa6 | 0);	//Set inverse display
+	
+    display_write_command(0xa8);		//set Display Enable (B&W)
+    display_write_command(0xd1);		//Set display pattern (1 bit for 1 pixel)
+    display_write_command(0xA9);		//Set display enable
 
 }
 
@@ -184,8 +166,8 @@ void display_model_initialise(void)
 //**********************************
 void display_model_set_contrast(uint8_t contrast_value)
 {
-	display_write_command(0x81);				//Set Vbias Potentiometer
-	display_write_command(35);					//(0~255 for selection)
+    display_write_command(0x81);			//Set potentiometer
+    display_write_command(contrast_value);	//0-255, although usable range is much more limited. 160 typ
 }
 
 
@@ -300,13 +282,13 @@ void display_write_pixel (uint16_t x_coord, uint16_t y_coord, uint32_t colour)
 //********** WRITE THE LOCAL RAM BUFFER TO THE DISPLAY **********
 //***************************************************************
 //***************************************************************
-//This must be called to actually update the display after changing anything as because there are 3 pixels in each 2 byute word sent to the display it doesn't make sense to
+//This must be called to actually update the display after changing anything as because there are 3 pixels in each 2 byte word sent to the display it doesn't make sense to
 //do this as each pixel is written because you'd end up with tripple the wanted number of writes and each with the address also needing to be written time!
 void display_output_buffer (void)
 {
-	uint32_t x_coord = 0;			//0-239
-	uint32_t y_coord = 0;			//0-159
-	uint16_t data;
+	uint32_t x_coord = 0;			//0-255
+	uint32_t y_coord = 0;			//0-127
+	uint8_t data;
 
 	//SET ADDRESS TO START
 	display_write_command(0x70);	// (9)"Set Row Address MBS" --> 0
@@ -314,38 +296,97 @@ void display_output_buffer (void)
 
     display_write_command(0x10);	// (4)"Set Column Address MBS" --> 0
     display_write_command(0x00);	// (4)"Set Column Address LBS" --> 0
-
+	
+	
 	DISPLAY_CS(0);						//Commands can be sent to both controller IC's every time
 	DISPLAY_CONTROL_DATA(1);			//CD high for a data
 
+
+//Version for ribbon cable at top orientation  (ideal viewing angle):
+	x_coord = 0;			//0-255
+	y_coord = 0;			//0-127
 	while (1)
 	{
-		//2 bytes per 3 pixels [R4,R3,R2,R1,R0,G5,G4,G3 | G2,G1,G0,B4,B3,B2,B1,B0]
+		//1 byte per 8 pixels [M7,M6,M5,M4,M3,M2,M1,M0]
 		data = 0;
-		if (display_get_pixel_value(x_coord++, y_coord))
-			data |= 0x07e0;
-		if (display_get_pixel_value(x_coord++, y_coord))
-			data |= 0x001f;
-		if (display_get_pixel_value(x_coord++, y_coord))
-			data |= 0xf800;
-
+ 
+ 
+		if (display_get_pixel_value(x_coord, y_coord++))
+			data |= 0x01;
+		if (display_get_pixel_value(x_coord, y_coord++))
+			data |= 0x02;
+		if (display_get_pixel_value(x_coord, y_coord++))
+			data |= 0x04;
+		if (display_get_pixel_value(x_coord, y_coord++))
+			data |= 0x08;
+		if (display_get_pixel_value(x_coord, y_coord++))
+			data |= 0x10;
+		if (display_get_pixel_value(x_coord, y_coord++))
+			data |= 0x20;
+		if (display_get_pixel_value(x_coord, y_coord++))
+			data |= 0x40;
+		if (display_get_pixel_value(x_coord, y_coord++))
+			data |= 0x80;
 
 		//Send byte
-		DISPLAY_WRITE_DATA((uint8_t)(data & 0x00ff));
-		DISPLAY_WRITE_DATA((uint8_t)(data >> 8));
+		DISPLAY_WRITE_DATA(data);
 
-
-
-		x_coord -= 3;
-		y_coord += 1;
-		if (y_coord >= DISPLAY_HEIGHT_PIXELS)
+		x_coord++;
+		y_coord -= 8;
+		if (x_coord >= DISPLAY_WIDTH_PIXELS)
 		{
-			y_coord = 0;
-			x_coord += 3;
-			if (x_coord >= DISPLAY_WIDTH_PIXELS)
+			x_coord = 0;
+			y_coord += 8;
+			if (y_coord >= DISPLAY_HEIGHT_PIXELS)
 				break;
 		}
 	}
+  
+ 
+//Version for ribbon cable at bottom orientation (not ideal viewing angle):
+/*
+	x_coord = 255;			//0-255
+	y_coord = 127;			//0-127
+	while (1)
+	{
+		//1 byte per 8 pixels [M7,M6,M5,M4,M3,M2,M1,M0]
+		data = 0;
+ 
+ 
+		if (display_get_pixel_value(x_coord, y_coord--))
+			data |= 0x01;
+		if (display_get_pixel_value(x_coord, y_coord--))
+			data |= 0x02;
+		if (display_get_pixel_value(x_coord, y_coord--))
+			data |= 0x04;
+		if (display_get_pixel_value(x_coord, y_coord--))
+			data |= 0x08;
+		if (display_get_pixel_value(x_coord, y_coord--))
+			data |= 0x10;
+		if (display_get_pixel_value(x_coord, y_coord--))
+			data |= 0x20;
+		if (display_get_pixel_value(x_coord, y_coord--))
+			data |= 0x40;
+		if (display_get_pixel_value(x_coord, y_coord--))
+			data |= 0x80;
+
+		//Send byte
+		DISPLAY_WRITE_DATA(data);
+
+		x_coord--;
+		y_coord += 8;
+		if (x_coord >= DISPLAY_WIDTH_PIXELS)
+		{
+			x_coord = 255;
+			y_coord -= 8;
+			if (y_coord >= DISPLAY_HEIGHT_PIXELS)
+				break;
+		}
+		
+	}
+*/
+
+
 	DISPLAY_CS(1);
 }
 
@@ -390,7 +431,7 @@ uint8_t display_get_pixel_value (uint16_t x_coord, uint16_t y_coord)
 //**********************************************
 //**********************************************
 //Modify this routine to suit the screen in use
-//This routine is usually that same as the instrucitons in the write part of display_write_bitmap_byte
+//This routine is usually that same as the instructions in the write part of display_write_bitmap_byte
 //The only difference may be setting the A0 data / command line.  However to allow for displays that aren't
 //so normal we use this write command routine.
 void display_write_command (uint8_t data)

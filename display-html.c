@@ -61,15 +61,15 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //p_file_pointer		Load with the pointer to the file or set to 0 for function to search for file name using search_for_filename
 //search_for_filename	If p_file_pointer == 0 then the available files will be searched to see if any match this filename.  Set to 0 if not required.
 //Returns				1 if file found and ready to read, 0 if not
-BYTE display_html_setup_read_file (CONSTANT BYTE *p_file_pointer, BYTE *search_for_filename, DWORD *file_size)
+uint8_t display_html_setup_read_file (const uint8_t *p_file_pointer, uint8_t *search_for_filename, uint32_t *file_size)
 {
-	BYTE file_count;
-	BYTE b_count;
-	BYTE filename_matches;
-	BYTE next_character;
-	CONSTANT BYTE *p_file;
-	BYTE data;
-	DWORD file_index;
+	uint8_t file_count;
+	uint8_t b_count;
+	uint8_t filename_matches;
+	uint8_t next_character;
+	const uint8_t *p_file;
+	uint8_t data;
+	uint32_t file_index;
 
 
 	if (p_file_pointer)
@@ -163,19 +163,19 @@ BYTE display_html_setup_read_file (CONSTANT BYTE *p_file_pointer, BYTE *search_f
 	}
 	
 	//FILE SIZE [4]
-	*file_size = ((DWORD)*p_file++) << 24;
-	*file_size |= ((DWORD)*p_file++) << 16;
-	*file_size |= ((DWORD)*p_file++) << 8;
-	*file_size |= (DWORD)*p_file++;
+	*file_size = ((uint32_t)*p_file++) << 24;
+	*file_size |= ((uint32_t)*p_file++) << 16;
+	*file_size |= ((uint32_t)*p_file++) << 8;
+	*file_size |= (uint32_t)*p_file++;
 			
 	//FILE START ADDRESS
 	#ifdef DISPLAY_FILES_ARE_EXTERNAL			//This define gets set by the Display Files Conveter application for binary file outputs
-		file_index = ((DWORD)*p_file++) << 24;
-		file_index |= ((DWORD)*p_file++) << 16;
-		file_index |= ((DWORD)*p_file++) << 8;
-		file_index |= (DWORD)*p_file++;
+		file_index = ((uint32_t)*p_file++) << 24;
+		file_index |= ((uint32_t)*p_file++) << 16;
+		file_index |= ((uint32_t)*p_file++) << 8;
+		file_index |= (uint32_t)*p_file++;
 	#else
-		file_index = (DWORD)p_file;
+		file_index = (uint32_t)p_file;
 	#endif
 		
 	DISPLAY_HTML_SET_READ_ADDRESS(file_index);
@@ -193,51 +193,51 @@ BYTE display_html_setup_read_file (CONSTANT BYTE *p_file_pointer, BYTE *search_f
 //***************************************
 //***************************************
 //Call this function after calling display_html_setup_read_file() or after your application has setup accessing your html file ready for the DISPLAY_HTML_READ_NEXT_BYTE define to be used
-void display_html_file (DWORD file_size)
+void display_html_file (uint32_t file_size)
 {
-	BYTE count;
-	BYTE count1;
-	BYTE data;
-	BYTE character;
-	BYTE b_temp;
-	WORD w_temp;
-	DWORD dw_temp;
-	DWORD dw_temp1;
-	BYTE previous_characters[10];
-	BYTE reading_opening_tag = 0;
-	BYTE reading_closing_tag = 0;
-	BYTE text_buffer[MAX_TEXT_BUFFER_LENGTH];
-	BYTE *p_text_buffer = &text_buffer[0];
-	BYTE reading_non_display_text = 0;
-	BYTE this_doc_styles_count = 0;
-	CONSTANT BYTE *p_font_to_use;
+	uint8_t count;
+	uint8_t count1;
+	uint8_t data;
+	uint8_t character;
+	uint8_t b_temp;
+	uint16_t w_temp;
+	uint32_t dw_temp;
+	uint32_t dw_temp1;
+	uint8_t previous_characters[10];
+	uint8_t reading_opening_tag = 0;
+	uint8_t reading_closing_tag = 0;
+	uint8_t text_buffer[MAX_TEXT_BUFFER_LENGTH];
+	uint8_t *p_text_buffer = &text_buffer[0];
+	uint8_t reading_non_display_text = 0;
+	uint8_t this_doc_styles_count = 0;
+	const uint8_t *p_font_to_use;
 	DISPLAY_HTML_TAGS_STACK tags_stack[MAX_TAGS_NESTING_LEVELS];	
-	BYTE tags_stack_current_depth = 0;
-	BYTE inside_tag = NOT_INSIDE_TAG;
-	BYTE link_name_or_value[13];
-	BYTE *p_link_name_or_value;
-	BYTE we_are_in_page_body = 0;
-	BYTE inside_tag_paramater_state = PARAMETER_READING_NAME;
-	BYTE style_attribute_name[MAX_STYLE_ATTRIBUTE_NAME_LENGTH];
-	BYTE *p_style_attribute_name;
-	BYTE style_attribute_value[MAX_STYLE_ATTRIBUTE_VALUE_LENGTH];
-	BYTE *p_style_attribute_value;
-	DWORD transparency_colour;
-	BYTE space_character_before_this_character = 0;
-	BYTE character_pre_upper_case_change;
-	BYTE dynamic_text_index;
-	BYTE dynamic_text_character_index = 0xff;
+	uint8_t tags_stack_current_depth = 0;
+	uint8_t inside_tag = NOT_INSIDE_TAG;
+	uint8_t link_name_or_value[13];
+	uint8_t *p_link_name_or_value;
+	uint8_t we_are_in_page_body = 0;
+	uint8_t inside_tag_paramater_state = PARAMETER_READING_NAME;
+	uint8_t style_attribute_name[MAX_STYLE_ATTRIBUTE_NAME_LENGTH];
+	uint8_t *p_style_attribute_name;
+	uint8_t style_attribute_value[MAX_STYLE_ATTRIBUTE_VALUE_LENGTH];
+	uint8_t *p_style_attribute_value;
+	uint32_t transparency_colour;
+	uint8_t space_character_before_this_character = 0;
+	uint8_t character_pre_upper_case_change;
+	uint8_t dynamic_text_index;
+	uint8_t dynamic_text_character_index = 0xff;
 	
 	#ifdef HTML_PASS_ANCHOR_LINK_FUNCTION				//Don't do if we're not storing links
-		BYTE anchor_link_value[13];
-		BYTE *p_anchor_link_value;
+		uint8_t anchor_link_value[13];
+		uint8_t *p_anchor_link_value;
 	#endif
 
 #ifdef HTML_INCLUDE_OPTION_SELECT				//>>>>>>>>>>>> REMOVE THIS SECTION! #####################################
-	static BYTE option_select_active = 0;
-	BYTE option_select_doing_index;
-	BYTE option_select_no_of_display_lines;
-	BYTE option_select_this_option_is_default;
+	static uint8_t option_select_active = 0;
+	uint8_t option_select_doing_index;
+	uint8_t option_select_no_of_display_lines;
+	uint8_t option_select_this_option_is_default;
 		
 	//Reset option select if it was previous in use
 	if (option_select_active)
@@ -1051,7 +1051,7 @@ void display_html_file (DWORD file_size)
 						else
 						{			
 							transparency_colour <<= 4;
-							transparency_colour |= (DWORD)data;
+							transparency_colour |= (uint32_t)data;
 						}
 					}
 				}
@@ -1376,9 +1376,9 @@ void display_html_file (DWORD file_size)
 //****************
 //***** PUSH *****
 //****************
-void display_html_push_stack_for_new_tag (DISPLAY_HTML_TAGS_STACK *tags_stack, BYTE *current_depth, BYTE *text_buffer_start, BYTE *p_text_buffer)
+void display_html_push_stack_for_new_tag (DISPLAY_HTML_TAGS_STACK *tags_stack, uint8_t *current_depth, uint8_t *text_buffer_start, uint8_t *p_text_buffer)
 {
-	BYTE count;
+	uint8_t count;
 	
 	//----- DISPLAY ANY BACKGROUND, BORDER AND TEXT THAT IS PENDING BEFORE WE MOVE INTO THE NEXT TAG -----
 	//We have to do this first as the new tag is going to display over the top or after the current tag
@@ -1416,10 +1416,10 @@ void display_html_push_stack_for_new_tag (DISPLAY_HTML_TAGS_STACK *tags_stack, B
 //***************
 //***** POP *****
 //***************
-void display_html_pop_stack_for_closing_tag (DISPLAY_HTML_TAGS_STACK *tags_stack, BYTE *current_depth, BYTE *text_buffer_start, BYTE *p_text_buffer)	
+void display_html_pop_stack_for_closing_tag (DISPLAY_HTML_TAGS_STACK *tags_stack, uint8_t *current_depth, uint8_t *text_buffer_start, uint8_t *p_text_buffer)	
 {
-	BYTE count;
-	WORD current_top;
+	uint8_t count;
+	uint16_t current_top;
 	
 	//----- DISPLAY ANY BACKGROUND, BORDER AND TEXT THAT IS PENDING BEFORE WE MOVE INTO THE NEXT TAG -----
 	//We have to do this first as the new tag is going to display over the top or after the current tag
@@ -1465,14 +1465,14 @@ void display_html_pop_stack_for_closing_tag (DISPLAY_HTML_TAGS_STACK *tags_stack
 //**************************************************
 //**************************************************
 //This is a sub function used by the display_html_file() function to display any pending text or bitmap before it starts a new section of the HTML page.
-void display_any_pending_elements (DISPLAY_HTML_TAGS_STACK *tags_stack, BYTE current_depth, BYTE *text_buffer_start, BYTE *p_text_buffer)
+void display_any_pending_elements (DISPLAY_HTML_TAGS_STACK *tags_stack, uint8_t current_depth, uint8_t *text_buffer_start, uint8_t *p_text_buffer)
 {
-	WORD x_end_coord;
-	WORD y_end_coord;
-	WORD options;
-	CONSTANT BYTE *p_font_to_use;
-	WORD new_top_coord = 0xffff;
-	BYTE count;
+	uint16_t x_end_coord;
+	uint16_t y_end_coord;
+	uint16_t options;
+	const uint8_t *p_font_to_use;
+	uint16_t new_top_coord = 0xffff;
+	uint8_t count;
 
 
 
@@ -1672,13 +1672,13 @@ void display_any_pending_elements (DISPLAY_HTML_TAGS_STACK *tags_stack, BYTE cur
 //doing_html_tag		1 for HTML tag, 0 for style
 //tags_stack			Ignored for style
 //style_index			Ignored for HTML tag
-void process_attribute_value (BYTE doing_html_tag, DISPLAY_HTML_TAGS_STACK *tags_stack, BYTE style_index, BYTE *style_attribute_name, BYTE *style_attribute_value)
+void process_attribute_value (uint8_t doing_html_tag, DISPLAY_HTML_TAGS_STACK *tags_stack, uint8_t style_index, uint8_t *style_attribute_name, uint8_t *style_attribute_value)
 {
-	WORD pixels_value = 0xffff;
-	DWORD colour_value = 0xffffffff;
-	BYTE *p_buffer;
-	BYTE data;
-	WORD multiplier;
+	uint16_t pixels_value = 0xffff;
+	uint32_t colour_value = 0xffffffff;
+	uint8_t *p_buffer;
+	uint8_t data;
+	uint16_t multiplier;
 	
 	//-----------------------------------
 	//----- CONVERT NUMBERIC VALUES -----
@@ -1725,7 +1725,7 @@ void process_attribute_value (BYTE doing_html_tag, DISPLAY_HTML_TAGS_STACK *tags
 				break;
 			
 			colour_value <<= 4;
-			colour_value |= (DWORD)data;
+			colour_value |= (uint32_t)data;
 		}
 	}
 
@@ -1777,9 +1777,9 @@ void process_attribute_value (BYTE doing_html_tag, DISPLAY_HTML_TAGS_STACK *tags
 			if (pixels_value < 0xffff)
 			{
 				if (doing_html_tag)
-					tags_stack[0].border_width = (BYTE)pixels_value;
+					tags_stack[0].border_width = (uint8_t)pixels_value;
 				else
-					html_styles[style_index].border_width = (BYTE)pixels_value;
+					html_styles[style_index].border_width = (uint8_t)pixels_value;
 			}
 		}
 	}
@@ -1799,9 +1799,9 @@ void process_attribute_value (BYTE doing_html_tag, DISPLAY_HTML_TAGS_STACK *tags
 		if (pixels_value < 0xffff)
 		{
 			if (doing_html_tag)
-				tags_stack[0].border_width = (BYTE)pixels_value;
+				tags_stack[0].border_width = (uint8_t)pixels_value;
 			else
-				html_styles[style_index].border_width = (BYTE)pixels_value;
+				html_styles[style_index].border_width = (uint8_t)pixels_value;
 		}
 	}
 	else if (find_string_in_string(style_attribute_name, STYLE_PARAMETER_TEXT_ALIGN))
@@ -1836,9 +1836,9 @@ void process_attribute_value (BYTE doing_html_tag, DISPLAY_HTML_TAGS_STACK *tags
 		if (pixels_value < 0xffff)
 		{
 			if (doing_html_tag)
-				tags_stack[0].font_size = (BYTE)pixels_value;
+				tags_stack[0].font_size = (uint8_t)pixels_value;
 			else
-				html_styles[style_index].font_size = (BYTE)pixels_value;
+				html_styles[style_index].font_size = (uint8_t)pixels_value;
 		}
 	}
 	else if (find_string_in_string(style_attribute_name, STYLE_PARAMETER_PADDING))
@@ -1852,9 +1852,9 @@ void process_attribute_value (BYTE doing_html_tag, DISPLAY_HTML_TAGS_STACK *tags
 			)
 			{
 				if (doing_html_tag)
-					tags_stack[0].padding_vert = (BYTE)pixels_value;
+					tags_stack[0].padding_vert = (uint8_t)pixels_value;
 				else
-					html_styles[style_index].padding_vert = (BYTE)pixels_value;
+					html_styles[style_index].padding_vert = (uint8_t)pixels_value;
 			}
 			else if (
 			(find_string_in_string(style_attribute_name, STYLE_PARAMETER_DASH_LEFT)) ||
@@ -1862,21 +1862,21 @@ void process_attribute_value (BYTE doing_html_tag, DISPLAY_HTML_TAGS_STACK *tags
 			)
 			{
 				if (doing_html_tag)
-					tags_stack[0].padding_hoz = (BYTE)pixels_value;
+					tags_stack[0].padding_hoz = (uint8_t)pixels_value;
 				else
-					html_styles[style_index].padding_hoz = (BYTE)pixels_value;
+					html_styles[style_index].padding_hoz = (uint8_t)pixels_value;
 			}
 			else
 			{
 				if (doing_html_tag)
 				{
-					tags_stack[0].padding_hoz = (BYTE)pixels_value;
-					tags_stack[0].padding_vert = (BYTE)pixels_value;
+					tags_stack[0].padding_hoz = (uint8_t)pixels_value;
+					tags_stack[0].padding_vert = (uint8_t)pixels_value;
 				}
 				else
 				{
-					html_styles[style_index].padding_hoz = (BYTE)pixels_value;
-					html_styles[style_index].padding_vert = (BYTE)pixels_value;
+					html_styles[style_index].padding_hoz = (uint8_t)pixels_value;
+					html_styles[style_index].padding_vert = (uint8_t)pixels_value;
 				}
 			}
 		}
@@ -1936,10 +1936,10 @@ void process_attribute_value (BYTE doing_html_tag, DISPLAY_HTML_TAGS_STACK *tags
 //*********************************************
 //*********************************************
 //This is a sub function used by the display_html_file() function to look to see if a style has been stored with a matching name
-void display_html_look_for_matching_style (DISPLAY_HTML_TAGS_STACK *tags_stack, BYTE total_styles_count, BYTE *style_name)
+void display_html_look_for_matching_style (DISPLAY_HTML_TAGS_STACK *tags_stack, uint8_t total_styles_count, uint8_t *style_name)
 {
-	BYTE count;
-	BYTE count1;
+	uint8_t count;
+	uint8_t count1;
 	
 	for (count = 0; count < total_styles_count; count++)
 	{
@@ -1998,20 +1998,20 @@ void display_html_look_for_matching_style (DISPLAY_HTML_TAGS_STACK *tags_stack, 
 //*********************************
 //This function is used to read a global styles .css file and called by the display_html_file() function to read styles in the header of an HTML page being displayed.
 //doing_global_styles		1 if this file is the global styles file or 0 if this file is an HTML file being displayed
-void display_html_read_styles (DWORD *file_size, BYTE *this_doc_styles_count, BYTE doing_global_styles)
+void display_html_read_styles (uint32_t *file_size, uint8_t *this_doc_styles_count, uint8_t doing_global_styles)
 {
-	BYTE data;
-	BYTE previous_characters[6];
-	BYTE character;
-	WORD count;
-	BYTE style_name[SYTLE_NAME_MAX_LENGTH];
-	BYTE *p_style_name;
-	BYTE style_attribute_name[MAX_STYLE_ATTRIBUTE_NAME_LENGTH];
-	BYTE *p_style_attribute_name;
-	BYTE style_attribute_value[MAX_STYLE_ATTRIBUTE_VALUE_LENGTH];
-	BYTE *p_style_attribute_value;
-	BYTE getting_style_state = STYLE_READING_NAME;
-	BYTE this_style_index = 0;
+	uint8_t data;
+	uint8_t previous_characters[6];
+	uint8_t character;
+	uint16_t count;
+	uint8_t style_name[SYTLE_NAME_MAX_LENGTH];
+	uint8_t *p_style_name;
+	uint8_t style_attribute_name[MAX_STYLE_ATTRIBUTE_NAME_LENGTH];
+	uint8_t *p_style_attribute_name;
+	uint8_t style_attribute_value[MAX_STYLE_ATTRIBUTE_VALUE_LENGTH];
+	uint8_t *p_style_attribute_value;
+	uint8_t getting_style_state = STYLE_READING_NAME;
+	uint8_t this_style_index = 0;
 	
 	
 
@@ -2249,9 +2249,9 @@ void display_html_read_styles (DWORD *file_size, BYTE *this_doc_styles_count, BY
 //********************************************************************
 //Looks for the first occurance of a constant string within a variable string
 //Returns character number of first character when found, or 0 if not found
-BYTE *find_string_in_string (BYTE *examine_string, CONSTANT BYTE *looking_for_string)
+uint8_t *find_string_in_string (uint8_t *examine_string, const uint8_t *looking_for_string)
 {
-	BYTE number_of_characters_matched = 0;
+	uint8_t number_of_characters_matched = 0;
 
 	while (*examine_string != 0x00)
 	{

@@ -83,10 +83,10 @@ void display_model_initialise(void)
 //Writes a rectangular block of pixels
 //This function simply writes individual pixels.  If your LCD controller has built in block drawing capabilities you could update this function
 //to use them for improved speed.
-void display_write_block (WORD x_start_coord, WORD y_start_coord, WORD x_end_coord, WORD y_end_coord, DWORD color)
+void display_write_block (uint16_t x_start_coord, uint16_t y_start_coord, uint16_t x_end_coord, uint16_t y_end_coord, uint32_t color)
 {
-	WORD x_coord;
-	WORD y_coord;
+	uint16_t x_coord;
+	uint16_t y_coord;
 
 
 	for (y_coord = y_start_coord; y_coord <= y_end_coord; y_coord++)		//Most natural visually is for the drawing to occur as a sweep down the screen.
@@ -112,7 +112,7 @@ void display_write_block (WORD x_start_coord, WORD y_start_coord, WORD x_end_coo
 //Assumes DISPLAY_CS is already active
 //color		| null | red | green | blue |
 //This function converts the colour to the display colour data format
-void display_write_pixel (WORD x_coord, WORD y_coord, DWORD color)
+void display_write_pixel (uint16_t x_coord, uint16_t y_coord, uint32_t color)
 {
 	
 	//The driver always works with coordinate 0,0 in top left corner.

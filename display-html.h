@@ -72,7 +72,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 	//----- YOU ARE STORING YOUR DISPLAY FILES BITMAP CONVERTER OUTPUT FILE WITHIN PROGRAM MEMORY -----
 	//These defines can be left as is
 	//Reading HTML source files:
-	#define	DISPLAY_HTML_SET_READ_ADDRESS(address)		p_display_html_current_address = (BYTE*)address		
+	#define	DISPLAY_HTML_SET_READ_ADDRESS(address)		p_display_html_current_address = (uint8_t*)address		
 	#define	DISPLAY_HTML_READ_NEXT_BYTE					(*p_display_html_current_address++)
 
 	//Reading image files:
@@ -87,11 +87,11 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //Fonts are selected from the font-size attribute.  The font used will be the nearest font available that is >= to the pixel size specified, starting from the smallest.
 #ifdef DISPLAY_HTML_C
 	//Add additional fonts to these defines as requried and update the total number define below
-	CONSTANT BYTE html_font_sizes[] = {7, 11, 15, 22, 42};
-	CONSTANT BYTE *html_fonts[] = {disp_font_5w_7h, disp_font_5w_11h, disp_font_15h, disp_font_22h, disp_font_42h};
+	const uint8_t html_font_sizes[] = {7, 11, 15, 22, 42};
+	const uint8_t *html_fonts[] = {disp_font_5w_7h, disp_font_5w_11h, disp_font_15h, disp_font_22h, disp_font_42h};
 #else
-	extern CONSTANT BYTE html_font_sizes[];
-	extern CONSTANT BYTE *html_fonts[];
+	extern const uint8_t html_font_sizes[];
+	extern const uint8_t *html_fonts[];
 #endif
 #define HTML_TOTAL_NUMBER_OF_FONTS		5
 
@@ -106,9 +106,9 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #define	HTML_GET_DYNAMIC_TEXT_FUNCTION(dynamic_text_index, dynamic_text_character_index)		html_get_dynamic_text_character(dynamic_text_index, dynamic_text_character_index)
 
 //Define in your application as:
-//BYTE html_get_dynamic_text_character(BYTE dynamic_text_index, BYTE dynamic_text_character_index)
+//uint8_t html_get_dynamic_text_character(uint8_t dynamic_text_index, uint8_t dynamic_text_character_index)
 #ifdef HTML_GET_DYNAMIC_TEXT_FUNCTION
-	extern BYTE html_get_dynamic_text_character(BYTE dynamic_text_index, BYTE dynamic_text_character_index);
+	extern uint8_t html_get_dynamic_text_character(uint8_t dynamic_text_index, uint8_t dynamic_text_character_index);
 #endif
 
 
@@ -121,10 +121,10 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #define	HTML_PASS_ANCHOR_LINK_FUNCTION(href_value, start_x, start_y, end_x, end_y)		html_store_anchor_link_function(href_value, start_x, start_y, end_x, end_y)
 
 //Define in your application as:
-//void html_store_anchor_link_function(BYTE *href_value, WORD start_x_coord, WORD start_y_coord, WORD end_x_coord, WORD end_y_coord)
+//void html_store_anchor_link_function(uint8_t *href_value, uint16_t start_x_coord, uint16_t start_y_coord, uint16_t end_x_coord, uint16_t end_y_coord)
 //	Note that end_#_coord is guaranteed to be >= start_#_coord
 #ifdef HTML_PASS_ANCHOR_LINK_FUNCTION
-	extern void html_store_anchor_link_function(BYTE *href_value, WORD start_x_coord, WORD start_y_coord, WORD end_x_coord, WORD end_y_coord);
+	extern void html_store_anchor_link_function(uint8_t *href_value, uint16_t start_x_coord, uint16_t start_y_coord, uint16_t end_x_coord, uint16_t end_y_coord);
 #endif
 
 
@@ -133,35 +133,35 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //----- DATA TYPE DEFINITIONS -----
 typedef struct _DISPLAY_HTML_STYLES
 {
-	WORD top;								//Absolute position value
-	WORD left;								//Absolute position value
-	WORD height;							//Absolute position value
-	WORD width;								//Absolute position value
-	DWORD fore_colour;						//00|RR||GG||BB
-	DWORD background_colour;
-	DWORD border_colour;
-	BYTE style_name[SYTLE_NAME_MAX_LENGTH];	//Null termianted
-	BYTE border_width;
-	BYTE align;								//Text align, 0 = left, 1 = centre, 2 = right
-	BYTE font_size;								//Font numeric reference
-	BYTE padding_hoz;						//Where different left and right padding values are specified the largest value is used for both
-	BYTE padding_vert;						//Where different top and bottom padding values are specified the largest value is used for both
+	uint16_t top;								//Absolute position value
+	uint16_t left;								//Absolute position value
+	uint16_t height;							//Absolute position value
+	uint16_t width;								//Absolute position value
+	uint32_t fore_colour;						//00|RR||GG||BB
+	uint32_t background_colour;
+	uint32_t border_colour;
+	uint8_t style_name[SYTLE_NAME_MAX_LENGTH];	//Null termianted
+	uint8_t border_width;
+	uint8_t align;								//Text align, 0 = left, 1 = centre, 2 = right
+	uint8_t font_size;								//Font numeric reference
+	uint8_t padding_hoz;						//Where different left and right padding values are specified the largest value is used for both
+	uint8_t padding_vert;						//Where different top and bottom padding values are specified the largest value is used for both
 } DISPLAY_HTML_STYLES;
 //If name length == 10 then there are 35 bytes user per style (36 in storage)
 
 
 typedef struct _DISPLAY_HTML_TAGS_STACK
 {
-	WORD top;								//Absolute position value
-	WORD left;								//Absolute position value
-	WORD height;							//Absolute position value
-	WORD width;								//Absolute position value
-	DWORD fore_colour;						//00|RR||GG||BB
-	BYTE border_width;
-	BYTE align;								//Text align, 0 = left, 1 = centre, 2 = right
-	BYTE font_size;							//Font size in pixels
-	BYTE padding_hoz;						//Where different left and right padding values are specified the largest value is used for both
-	BYTE padding_vert;						//Where different top and bottom padding values are specified the largest value is used for both
+	uint16_t top;								//Absolute position value
+	uint16_t left;								//Absolute position value
+	uint16_t height;							//Absolute position value
+	uint16_t width;								//Absolute position value
+	uint32_t fore_colour;						//00|RR||GG||BB
+	uint8_t border_width;
+	uint8_t align;								//Text align, 0 = left, 1 = centre, 2 = right
+	uint8_t font_size;							//Font size in pixels
+	uint8_t padding_hoz;						//Where different left and right padding values are specified the largest value is used for both
+	uint8_t padding_vert;						//Where different top and bottom padding values are specified the largest value is used for both
 } DISPLAY_HTML_TAGS_STACK;
 
 
@@ -243,30 +243,30 @@ typedef enum _DISPLAY_HTML_READING_STYLE_STATE
 //-----------------------------------
 //----- INTERNAL ONLY FUNCTIONS -----
 //-----------------------------------
-void display_html_push_stack_for_new_tag (DISPLAY_HTML_TAGS_STACK *tags_stack, BYTE *current_depth, BYTE *text_buffer_start, BYTE *p_text_buffer);
-void display_html_pop_stack_for_closing_tag (DISPLAY_HTML_TAGS_STACK *tags_stack, BYTE *current_depth, BYTE *text_buffer_start, BYTE *p_text_buffer);
-void display_any_pending_elements (DISPLAY_HTML_TAGS_STACK *tags_stack, BYTE current_depth, BYTE *text_buffer_start, BYTE *p_text_buffer);
-void process_attribute_value (BYTE doing_html_tag, DISPLAY_HTML_TAGS_STACK *tags_stack, BYTE style_index, BYTE *style_attribute_name, BYTE *style_attribute_value);
-void display_html_look_for_matching_style (DISPLAY_HTML_TAGS_STACK *tags_stack, BYTE total_styles_count, BYTE *style_name);
-BYTE *find_string_in_string (BYTE *examine_string, CONSTANT BYTE *looking_for_string);
+void display_html_push_stack_for_new_tag (DISPLAY_HTML_TAGS_STACK *tags_stack, uint8_t *current_depth, uint8_t *text_buffer_start, uint8_t *p_text_buffer);
+void display_html_pop_stack_for_closing_tag (DISPLAY_HTML_TAGS_STACK *tags_stack, uint8_t *current_depth, uint8_t *text_buffer_start, uint8_t *p_text_buffer);
+void display_any_pending_elements (DISPLAY_HTML_TAGS_STACK *tags_stack, uint8_t current_depth, uint8_t *text_buffer_start, uint8_t *p_text_buffer);
+void process_attribute_value (uint8_t doing_html_tag, DISPLAY_HTML_TAGS_STACK *tags_stack, uint8_t style_index, uint8_t *style_attribute_name, uint8_t *style_attribute_value);
+void display_html_look_for_matching_style (DISPLAY_HTML_TAGS_STACK *tags_stack, uint8_t total_styles_count, uint8_t *style_name);
+uint8_t *find_string_in_string (uint8_t *examine_string, const uint8_t *looking_for_string);
 
 
 //-----------------------------------------
 //----- INTERNAL & EXTERNAL FUNCTIONS -----
 //-----------------------------------------
 //(Also defined below as extern)
-BYTE display_html_setup_read_file (CONSTANT BYTE *p_file_pointer, BYTE *search_for_filename, DWORD *file_size);
-void display_html_read_styles (DWORD *file_size, BYTE *this_doc_styles_count, BYTE doing_global_styles);
-void display_html_file (DWORD file_size);
+uint8_t display_html_setup_read_file (const uint8_t *p_file_pointer, uint8_t *search_for_filename, uint32_t *file_size);
+void display_html_read_styles (uint32_t *file_size, uint8_t *this_doc_styles_count, uint8_t doing_global_styles);
+void display_html_file (uint32_t file_size);
 
 
 #else
 //------------------------------
 //----- EXTERNAL FUNCTIONS -----
 //------------------------------
-extern BYTE display_html_setup_read_file (CONSTANT BYTE *p_file_pointer, BYTE *search_for_filename, DWORD *file_size);
-extern void display_html_read_styles (DWORD *file_size, BYTE *this_doc_styles_count, BYTE doing_global_styles);
-extern void display_html_file (DWORD file_size);
+extern uint8_t display_html_setup_read_file (const uint8_t *p_file_pointer, uint8_t *search_for_filename, uint32_t *file_size);
+extern void display_html_read_styles (uint32_t *file_size, uint8_t *this_doc_styles_count, uint8_t doing_global_styles);
+extern void display_html_file (uint32_t file_size);
 
 
 #endif
@@ -284,23 +284,23 @@ extern void display_html_file (DWORD file_size);
 //----- INTERNAL ONLY MEMORY DEFINITIONS -----
 //--------------------------------------------
 DISPLAY_HTML_STYLES html_styles[MAX_STYLES_TO_STORE];
-DWORD current_style_background_colour;
-DWORD current_style_background_colour_copy;
-DWORD current_style_border_colour;
-BYTE global_styles_count;
+uint32_t current_style_background_colour;
+uint32_t current_style_background_colour_copy;
+uint32_t current_style_border_colour;
+uint8_t global_styles_count;
 
 #ifdef HTML_PASS_ANCHOR_LINK_FUNCTION				//Don't do if we're not storing links
-	BYTE anchor_get_next_start_coord;
-	WORD anchor_link_start_x;
-	WORD anchor_link_start_y;
-	WORD anchor_link_end_x;
-	WORD anchor_link_end_y;
+	uint8_t anchor_get_next_start_coord;
+	uint16_t anchor_link_start_x;
+	uint16_t anchor_link_start_y;
+	uint16_t anchor_link_end_x;
+	uint16_t anchor_link_end_y;
 #endif
 	
 #ifdef DISPLAY_FILES_ARE_EXTERNAL
-	DWORD display_html_current_address;
+	uint32_t display_html_current_address;
 #else
-	CONSTANT BYTE *p_display_html_current_address;
+	const uint8_t *p_display_html_current_address;
 #endif
 
 //--------------------------------------------------
@@ -323,27 +323,27 @@ BYTE global_styles_count;
 
 //----- CONTENT STRINGS -----
 #ifdef DISPLAY_HTML_C
-CONSTANT BYTE STYLE_PARAMETER_VALUE_HASH[] = {"#"};
-CONSTANT BYTE STYLE_PARAMETER_VALUE_PX[] = {"PX"};
-CONSTANT BYTE STYLE_PARAMETER_TOP[] = {"TOP"};
-CONSTANT BYTE STYLE_PARAMETER_LEFT[] = {"LEFT"};
-CONSTANT BYTE STYLE_PARAMETER_HEIGHT[] = {"HEIGHT"};
-CONSTANT BYTE STYLE_PARAMETER_WIDTH[] = {"WIDTH"};
-CONSTANT BYTE STYLE_PARAMETER_BACKGROUND_COLOR[] = {"BACKGROUND-COLOR"};
-CONSTANT BYTE STYLE_PARAMETER_COLOR[] = {"COLOR"};
-CONSTANT BYTE STYLE_PARAMETER_BORDER[] = {"BORDER"};
-CONSTANT BYTE STYLE_PARAMETER_BORDER_DASH[] = {"BORDER-"};
-CONSTANT BYTE STYLE_PARAMETER_DASH_WIDTH[] = {"-WIDTH"};
-CONSTANT BYTE STYLE_PARAMETER_DASH_COLOR[] = {"-COLOR"};
-CONSTANT BYTE STYLE_PARAMETER_TEXT_ALIGN[] = {"TEXT-ALIGN"};
-CONSTANT BYTE STYLE_PARAMETER_CENT[] = {"CENT"};			//CENTER or CENTRE
-CONSTANT BYTE STYLE_PARAMETER_RIGHT[] = {"RIGHT"};
-CONSTANT BYTE STYLE_PARAMETER_FONT_SIZE[] = {"FONT-SIZE"};
-CONSTANT BYTE STYLE_PARAMETER_PADDING[] = {"PADDING"};
-CONSTANT BYTE STYLE_PARAMETER_DASH_TOP[] = {"-TOP"};
-CONSTANT BYTE STYLE_PARAMETER_DASH_BOTTOM[] = {"-BOTTOM"};
-CONSTANT BYTE STYLE_PARAMETER_DASH_LEFT[] = {"-LEFT"};
-CONSTANT BYTE STYLE_PARAMETER_DASH_RIGHT[] = {"-RIGHT"};
+const uint8_t STYLE_PARAMETER_VALUE_HASH[] = {"#"};
+const uint8_t STYLE_PARAMETER_VALUE_PX[] = {"PX"};
+const uint8_t STYLE_PARAMETER_TOP[] = {"TOP"};
+const uint8_t STYLE_PARAMETER_LEFT[] = {"LEFT"};
+const uint8_t STYLE_PARAMETER_HEIGHT[] = {"HEIGHT"};
+const uint8_t STYLE_PARAMETER_WIDTH[] = {"WIDTH"};
+const uint8_t STYLE_PARAMETER_BACKGROUND_COLOR[] = {"BACKGROUND-COLOR"};
+const uint8_t STYLE_PARAMETER_COLOR[] = {"COLOR"};
+const uint8_t STYLE_PARAMETER_BORDER[] = {"BORDER"};
+const uint8_t STYLE_PARAMETER_BORDER_DASH[] = {"BORDER-"};
+const uint8_t STYLE_PARAMETER_DASH_WIDTH[] = {"-WIDTH"};
+const uint8_t STYLE_PARAMETER_DASH_COLOR[] = {"-COLOR"};
+const uint8_t STYLE_PARAMETER_TEXT_ALIGN[] = {"TEXT-ALIGN"};
+const uint8_t STYLE_PARAMETER_CENT[] = {"CENT"};			//CENTER or CENTRE
+const uint8_t STYLE_PARAMETER_RIGHT[] = {"RIGHT"};
+const uint8_t STYLE_PARAMETER_FONT_SIZE[] = {"FONT-SIZE"};
+const uint8_t STYLE_PARAMETER_PADDING[] = {"PADDING"};
+const uint8_t STYLE_PARAMETER_DASH_TOP[] = {"-TOP"};
+const uint8_t STYLE_PARAMETER_DASH_BOTTOM[] = {"-BOTTOM"};
+const uint8_t STYLE_PARAMETER_DASH_LEFT[] = {"-LEFT"};
+const uint8_t STYLE_PARAMETER_DASH_RIGHT[] = {"-RIGHT"};
 #endif
 
 

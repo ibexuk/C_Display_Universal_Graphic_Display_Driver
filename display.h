@@ -41,7 +41,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #define	DISPLAY_C_INIT
 
 
-#define	DISPLAY_PROG_MEM_SIZE		DWORD			//DWORD or WORD depending on your device (16/32bit)
+#define	DISPLAY_PROG_MEM_SIZE		uint32_t			//uint32_t or uint16_t depending on your device (16/32bit)
 
 //-------------------------------
 //----- BITMAP FILE DEFINES -----				//<<<<< CHECK FOR A NEW APPLICATION <<<<<
@@ -69,7 +69,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #else
 	//----- YOU ARE STORING YOUR DISPLAY FILES BITMAP CONVERTER OUTPUT FILE WITHIN PROGRAM MEMORY -----
 	//These defines can be left as is
-	#define	DISPLAY_FONT_SET_READ_ADDRESS(address)		p_display_file_current_address = (BYTE*)address
+	#define	DISPLAY_FONT_SET_READ_ADDRESS(address)		p_display_file_current_address = (uint8_t*)address
 	#define	DISPLAY_FONT_READ_NEXT_BYTE					(*p_display_file_current_address++)
 #endif
 
@@ -89,7 +89,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #else
 	//----- YOU ARE STORING YOUR DISPLAY FILES BITMAP CONVERTER OUTPUT FILE WITHIN PROGRAM MEMORY -----
 	//These defines can be left as is
-	#define	DISPLAY_BITMAP_SET_READ_ADDRESS(address)		p_display_file_current_address = (BYTE*)address
+	#define	DISPLAY_BITMAP_SET_READ_ADDRESS(address)		p_display_file_current_address = (uint8_t*)address
 	#define	DISPLAY_BITMAP_READ_NEXT_BYTE					(*p_display_file_current_address++)
 #endif
 
@@ -133,6 +133,35 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
 
+typedef union _DISPLAY_UINT16_VAL
+{
+    uint16_t Val;
+    struct
+    {
+        uint8_t LSB;
+        uint8_t MSB;
+    } byte;
+    uint8_t v[2];
+} DISPLAY_UINT16_VAL;
+
+
+typedef union _DISPLAY_UINT32_VAL
+{
+    uint32_t Val;
+    struct
+    {
+        uint8_t LOLSB;
+        uint8_t LOMSB;
+        uint8_t HILSB;
+        uint8_t HIMSB;
+    } byte;
+    struct
+    {
+        uint16_t LSW;
+        uint16_t MSW;
+    } word;
+    uint8_t v[4];
+} DISPLAY_UINT32_VAL;
 
 #endif  //#ifndef DISPLAY_C_INIT
 
@@ -147,10 +176,10 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //-----------------------------------
 //----- INTERNAL ONLY FUNCTIONS -----
 //-----------------------------------
-CONSTANT BYTE *display_const_string_get_next_char(CONSTANT BYTE *p_string, WORD *next_character);
-BYTE *display_variable_string_get_next_char(BYTE *p_string, WORD *next_character);
-void display_load_font (CONSTANT BYTE *p_font);
-void display_get_font_character (WORD character);
+const uint8_t *display_const_string_get_next_char(const uint8_t *p_string, uint16_t *next_character);
+uint8_t *display_variable_string_get_next_char(uint8_t *p_string, uint16_t *next_character);
+void display_load_font (const uint8_t *p_font);
+void display_get_font_character (uint16_t character);
 void display_character (void);
 
 
@@ -160,18 +189,18 @@ void display_character (void);
 //-----------------------------------------
 //(Also defined below as extern)
 void display_initialise (void);
-void display_clear_screen (DWORD colour);
-WORD display_bitmap (CONSTANT BYTE *p_bitmap, WORD x_coord, WORD y_coord, DWORD transparency_colour);
-CONSTANT BYTE *display_const_string (CONSTANT BYTE *p_font, WORD options,
-								BYTE horizontal_padding, BYTE vertical_padding,
-								WORD x_start_coord, WORD y_start_coord, WORD x_end_coord, WORD y_end_coord,
-								CONSTANT BYTE *p_ascii_string);
-CONSTANT BYTE *display_variable_string (CONSTANT BYTE *p_font, WORD options,
-								BYTE horizontal_padding, BYTE vertical_padding,
-								WORD x_start_coord, WORD y_start_coord, WORD x_end_coord, WORD y_end_coord,
-								BYTE *p_string);
-void display_rectangle (DWORD color, BYTE thickness, WORD x_start_coord, WORD y_start_coord, WORD x_end_coord, WORD y_end_coord);
-BYTE display_find_file (BYTE *search_for_filename);
+void display_clear_screen (uint32_t colour);
+uint16_t display_bitmap (const uint8_t *p_bitmap, uint16_t x_coord, uint16_t y_coord, uint32_t transparency_colour);
+const uint8_t *display_const_string (const uint8_t *p_font, uint16_t options,
+								uint8_t horizontal_padding, uint8_t vertical_padding,
+								uint16_t x_start_coord, uint16_t y_start_coord, uint16_t x_end_coord, uint16_t y_end_coord,
+								const uint8_t *p_ascii_string);
+const uint8_t *display_variable_string (const uint8_t *p_font, uint16_t options,
+								uint8_t horizontal_padding, uint8_t vertical_padding,
+								uint16_t x_start_coord, uint16_t y_start_coord, uint16_t x_end_coord, uint16_t y_end_coord,
+								uint8_t *p_string);
+void display_rectangle (uint32_t color, uint8_t thickness, uint16_t x_start_coord, uint16_t y_start_coord, uint16_t x_end_coord, uint16_t y_end_coord);
+uint8_t display_find_file (uint8_t *search_for_filename);
 void display_test (void);
 
 
@@ -180,18 +209,18 @@ void display_test (void);
 //----- EXTERNAL FUNCTIONS -----
 //------------------------------
 extern void display_initialise (void);
-extern void display_clear_screen (DWORD colour);
-extern WORD display_bitmap (CONSTANT BYTE *p_bitmap, WORD x_coord, WORD y_coord, DWORD transparency_colour);
-extern CONSTANT BYTE *display_const_string (CONSTANT BYTE *p_font, WORD options,
-								BYTE horizontal_padding, BYTE vertical_padding,
-								WORD x_start_coord, WORD y_start_coord, WORD x_end_coord, WORD y_end_coord,
-								CONSTANT BYTE *p_ascii_string);
-extern CONSTANT BYTE *display_variable_string (CONSTANT BYTE *p_font, WORD options,
-								BYTE horizontal_padding, BYTE vertical_padding,
-								WORD x_start_coord, WORD y_start_coord, WORD x_end_coord, WORD y_end_coord,
-								BYTE *p_string);
-extern void display_rectangle (DWORD color, BYTE thickness, WORD x_start_coord, WORD y_start_coord, WORD x_end_coord, WORD y_end_coord);
-extern BYTE display_find_file (BYTE *search_for_filename);
+extern void display_clear_screen (uint32_t colour);
+extern uint16_t display_bitmap (const uint8_t *p_bitmap, uint16_t x_coord, uint16_t y_coord, uint32_t transparency_colour);
+extern const uint8_t *display_const_string (const uint8_t *p_font, uint16_t options,
+								uint8_t horizontal_padding, uint8_t vertical_padding,
+								uint16_t x_start_coord, uint16_t y_start_coord, uint16_t x_end_coord, uint16_t y_end_coord,
+								const uint8_t *p_ascii_string);
+extern const uint8_t *display_variable_string (const uint8_t *p_font, uint16_t options,
+								uint8_t horizontal_padding, uint8_t vertical_padding,
+								uint16_t x_start_coord, uint16_t y_start_coord, uint16_t x_end_coord, uint16_t y_end_coord,
+								uint8_t *p_string);
+extern void display_rectangle (uint32_t color, uint8_t thickness, uint16_t x_start_coord, uint16_t y_start_coord, uint16_t x_end_coord, uint16_t y_end_coord);
+extern uint8_t display_find_file (uint8_t *search_for_filename);
 extern void display_test (void);
 
 
@@ -209,12 +238,12 @@ extern void display_test (void);
 //--------------------------------------------
 //----- INTERNAL ONLY MEMORY DEFINITIONS -----
 //--------------------------------------------
-WORD display_font_spacing;
+uint16_t display_font_spacing;
 
 #ifdef DISPLAY_FILES_ARE_EXTERNAL
 	DISPLAY_PROG_MEM_SIZE display_file_current_address;
 #else
-	CONSTANT BYTE *p_display_file_current_address;
+	const uint8_t *p_display_file_current_address;
 #endif
 
 
@@ -222,17 +251,17 @@ WORD display_font_spacing;
 //----- INTERNAL & EXTERNAL MEMORY DEFINITIONS -----
 //--------------------------------------------------
 //(Also defined below as extern)
-DWORD display_foreground_colour;
-DWORD display_background_colour;
-WORD display_auto_x_coordinate;
-WORD display_auto_y_coordinate;
-WORD display_bitmap_width;
-WORD display_bitmap_height;
-WORD display_font_inter_line_space;
-WORD display_last_text_line_y_coordinate;
-WORD display_font_creation_flags;
-WORD display_font_first_character;
-WORD display_font_last_character;
+uint32_t display_foreground_colour;
+uint32_t display_background_colour;
+uint16_t display_auto_x_coordinate;
+uint16_t display_auto_y_coordinate;
+uint16_t display_bitmap_width;
+uint16_t display_bitmap_height;
+uint16_t display_font_inter_line_space;
+uint16_t display_last_text_line_y_coordinate;
+uint16_t display_font_creation_flags;
+uint16_t display_font_first_character;
+uint16_t display_font_last_character;
 DISPLAY_PROG_MEM_SIZE display_font_data_table_address;
 DISPLAY_PROG_MEM_SIZE display_font_offset_table_address;
 DISPLAY_PROG_MEM_SIZE display_font_width_table_address;
@@ -244,14 +273,14 @@ DISPLAY_PROG_MEM_SIZE display_font_start_address;
 //---------------------------------------
 //----- EXTERNAL MEMORY DEFINITIONS -----
 //---------------------------------------
-extern DWORD display_foreground_colour;
-extern DWORD display_background_colour;
-extern WORD display_auto_x_coordinate;
-extern WORD display_auto_y_coordinate;
-extern WORD display_bitmap_width;
-extern WORD display_bitmap_height;
-extern WORD display_font_inter_line_space;
-extern WORD display_last_text_line_y_coordinate;
+extern uint32_t display_foreground_colour;
+extern uint32_t display_background_colour;
+extern uint16_t display_auto_x_coordinate;
+extern uint16_t display_auto_y_coordinate;
+extern uint16_t display_bitmap_width;
+extern uint16_t display_bitmap_height;
+extern uint16_t display_font_inter_line_space;
+extern uint16_t display_last_text_line_y_coordinate;
 
 
 #endif

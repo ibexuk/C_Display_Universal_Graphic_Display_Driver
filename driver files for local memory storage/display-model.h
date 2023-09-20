@@ -134,8 +134,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //-----------------------------------------
 //(Also defined below as extern)
 void display_model_initialise(void);
-void display_write_pixel (WORD x_coord, WORD y_coord, DWORD color);
-void display_write_block (WORD x_start_coord, WORD y_start_coord, WORD x_end_coord, WORD y_end_coord, DWORD color);
+void display_write_pixel (uint16_t x_coord, uint16_t y_coord, uint32_t color);
+void display_write_block (uint16_t x_start_coord, uint16_t y_start_coord, uint16_t x_end_coord, uint16_t y_end_coord, uint32_t color);
 
 
 #else
@@ -143,8 +143,8 @@ void display_write_block (WORD x_start_coord, WORD y_start_coord, WORD x_end_coo
 //----- EXTERNAL FUNCTIONS -----
 //------------------------------
 extern void display_model_initialise(void);
-extern void display_write_pixel (WORD x_coord, WORD y_coord, DWORD color);
-extern void display_write_block (WORD x_start_coord, WORD y_start_coord, WORD x_end_coord, WORD y_end_coord, DWORD color);
+extern void display_write_pixel (uint16_t x_coord, uint16_t y_coord, uint32_t color);
+extern void display_write_block (uint16_t x_start_coord, uint16_t y_start_coord, uint16_t x_end_coord, uint16_t y_end_coord, uint32_t color);
 
 
 #endif
@@ -161,20 +161,20 @@ extern void display_write_block (WORD x_start_coord, WORD y_start_coord, WORD x_
 //--------------------------------------------
 //----- INTERNAL ONLY MEMORY DEFINITIONS -----
 //--------------------------------------------
-BYTE tcon_value;
+uint8_t tcon_value;
 
 
 //--------------------------------------------------
 //----- INTERNAL & EXTERNAL MEMORY DEFINITIONS -----
 //--------------------------------------------------
 //(Also defined below as extern)
-DWORD display_buffer[(DISPLAY_WIDTH_PIXELS * DISPLAY_HEIGHT_PIXELS)];			//Starting from top left increment column and then move down to next row.  led_array[0] = top, left.  led_array[1] = top, left+1
+uint32_t display_buffer[(DISPLAY_WIDTH_PIXELS * DISPLAY_HEIGHT_PIXELS)];			//Starting from top left increment column and then move down to next row.  led_array[0] = top, left.  led_array[1] = top, left+1
 
 #else
 //---------------------------------------
 //----- EXTERNAL MEMORY DEFINITIONS -----
 //---------------------------------------
-extern DWORD display_buffer[(DISPLAY_WIDTH_PIXELS * DISPLAY_HEIGHT_PIXELS)];
+extern uint32_t display_buffer[(DISPLAY_WIDTH_PIXELS * DISPLAY_HEIGHT_PIXELS)];
 
 
 #endif
